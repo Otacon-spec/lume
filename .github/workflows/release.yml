@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_TOOLCHAIN: "1.96.0"
+
+jobs:
+  verifiche:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  piattaforme:
+    uses: ./.github/workflows/piattaforme.yml
+    permissions:
+      contents: read
+
+  release:
+    needs: [verifiche, piattaforme]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout del commit esatto dell'evento
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref || github.sha }}
+          fetch-depth: 0
+      - name: HEAD coincide con il commit dell'evento
+        shell: pwsh
+        run: |
+          $head = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "git rev-parse HEAD fallito" }
+          $atteso = if ($env:GITHUB_EVENT_NAME -eq 'push') {
+            (git rev-parse "$env:GITHUB_REF^{commit}").Trim()
+          } else {
+            $env:GITHUB_SHA
+          }
+          if ($LASTEXITCODE -ne 0 -or -not $atteso) { throw "impossibile risolvere il commit dell'evento" }
+          if ($head -ne $atteso) { throw "HEAD $head diverso dal commit dell'evento $atteso" }
+      - name: Il tag è vX.Y.Z e coincide con la versione del workspace
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch') { return }
+          if ($env:GITHUB_REF_NAME -notmatch '^v\d+\.\d+\.\d+$') { throw "tag $env:GITHUB_REF_NAME: solo vX.Y.Z, senza suffissi" }
+          $versione = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+          if ("v$versione" -ne $env:GITHUB_REF_NAME) { throw "tag $env:GITHUB_REF_NAME, Cargo.toml $versione" }
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup toolchain install $env:RUST_TOOLCHAIN --profile minimal
+          rustup default $env:RUST_TOOLCHAIN
+      - name: Build, controllo dei percorsi e zip
+        shell: pwsh
+        run: ./tools/build_release_bundle.ps1 -OutputDirectory artifacts
+      - name: Conserva zip e checksum del run di prova
+        uses: actions/upload-artifact@v4
+        with:
+          name: lume-bundle-windows-x86_64
+          path: |
+            artifacts/lume-*-windows-x86_64-*.zip
+            artifacts/lume-*-windows-x86_64-*.zip.sha256
+            artifacts/lume-*-windows-x86_64-*.zip.MANIFEST.json
+      - name: Scarica il pacchetto Linux verificato
+        uses: actions/download-artifact@v4
+        with:
+          name: lume-linux-x86_64
+          path: artifacts
+      - name: Scarica i pacchetti macOS verificati
+        uses: actions/download-artifact@v4
+        with:
+          pattern: lume-macos-*
+          path: artifacts
+          merge-multiple: true
+      - name: Verifica manifest e commit di tutti gli artefatti
+        shell: pwsh
+        run: |
+          $commit = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $commit -notmatch '^[0-9a-f]{40}$') {
+            throw "impossibile leggere HEAD: $commit"
+          }
+          $artefatti = @(Get-ChildItem -Path artifacts -File |
+            Where-Object { $_.Name -match '\.(zip|tar\.gz)$' })
+          if ($artefatti.Count -lt 4) {
+            throw "attesi almeno 4 artefatti, trovati $($artefatti.Count)"
+          }
+          foreach ($artefatto in $artefatti) {
+            python tools/verifica_manifest_artefatto.py $artefatto.FullName $commit
+            if ($LASTEXITCODE -ne 0) { throw "manifest non valido: $($artefatto.Name)" }
+          }
+      - name: Release normale (releases/latest ignora le pre-release)
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = @(Get-ChildItem -Path artifacts -File | ForEach-Object { $_.FullName })
+          if ($assets.Count -lt 12) { throw "attesi almeno 12 file (archivio, checksum, manifest per piattaforma), trovati $($assets.Count)" }
+          gh release create $env:GITHUB_REF_NAME `
+            @assets `
+            --title "Lume $env:GITHUB_REF_NAME (alfa)" `
+            --notes "Versione alfa per Windows x64, Linux x86_64, macOS Apple Silicon e macOS Intel. I pacchetti Windows e macOS non sono firmati né notarizzati. Le novità sono in CHANGELOG.md; vedi README per i limiti di piattaforma."

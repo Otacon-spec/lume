@@ -1,0 +1,16 @@
+[package]
+name = "lume-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Strumenti esterni richiesti dai test di Lume (solo dev-dependency)"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,56 @@
+# cargo-deny: advisory RustSec, licenze e sorgenti. La CI lo esegue a ogni
+# PR (.github/workflows/ci.yml). Le licenze sono quelle di about.toml.
+[graph]
+# Gli stessi target di distribuzione dichiarati in about.toml.
+targets = [
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+]
+
+[advisories]
+# Le vulnerabilità non si ignorano mai: un advisory nuovo si legge, non si
+# silenzia. Ammessi solo advisory «unmaintained» senza versione corretta,
+# ognuno con il motivo verificato. Rivalutare a ogni aggiornamento di iced.
+ignore = [
+    { id = "RUSTSEC-2026-0206", reason = "rustybuzz 0.20.1 non più mantenuto, alternativa harfrust; lo porta usvg 0.45.1 <- resvg 0.45.1 <- iced_tiny_skia/iced_wgpu 0.14.0 (cargo tree -i rustybuzz); nessuna versione corretta." },
+    { id = "RUSTSEC-2026-0192", reason = "ttf-parser 0.25.1 non più mantenuto, alternativa skrifa; lo portano fontdb 0.23.0 <- cosmic-text 0.15.0 (iced_wgpu, iced_graphics, iced_tiny_skia) e rustybuzz/usvg (cargo tree -i ttf-parser); nessuna versione corretta." },
+    { id = "RUSTSEC-2024-0436", reason = "paste 1.0.15 è solo dipendenza transitiva di metal 0.32.0 per i target Apple; non è disponibile un aggiornamento sicuro upstream (cargo deny check advisories). Rivalutare quando wgpu/metal sostituirà paste." },
+]
+
+[licenses]
+allow = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD",
+    "ISC",
+    "Zlib",
+    "Unlicense",
+    "Unicode-3.0",
+    "BSL-1.0",
+    "CC0-1.0",
+]
+confidence-threshold = 0.9
+# Le stesse eccezioni crate per crate di about.toml.
+exceptions = [
+    { crate = "option-ext", allow = ["MPL-2.0"] },
+    { crate = "webpki-roots", allow = ["CDLA-Permissive-2.0"] },
+]
+
+[licenses.private]
+# I crate del workspace sono di Lume (Apache-2.0, `publish = false`).
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# le dipendenze path fra crate del workspace non hanno versione
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

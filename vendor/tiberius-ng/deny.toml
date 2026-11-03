@@ -1,0 +1,45 @@
+# cargo-deny configuration — supply-chain / advisory gate for tiberius.
+#
+# Run locally with:  cargo deny check advisories bans sources licenses
+# CI runs the same via .github/workflows/security.yml.
+#
+# Policy: any security *vulnerability* or *yanked* crate in the actually-built
+# dependency graph fails the build. The `ignore` list below contains only
+# advisories that are provably NOT part of the shipped library — they come from
+# dev-dependencies (tests/examples) or from opt-in, non-default features — so
+# they cannot affect a downstream user of the default crate. Each entry is
+# justified; revisit whenever the upstream tooling gains a maintained successor.
+
+[advisories]
+yanked = "deny"
+ignore = [
+    # The following are ALL dev-dependency-only (test harness + the aad-auth
+    # example) and are never compiled into the published library.
+    { id = "RUSTSEC-2024-0375", reason = "atty: dev-dependency only (via `names` -> clap 3); not shipped" },
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error: dev-dependency only (via `names` -> clap 3); not shipped" },
+    { id = "RUSTSEC-2024-0436", reason = "paste: dev/test only (tests/bulk.rs + azure_identity example); not shipped" },
+]
+
+[licenses]
+# Only permissive, OSI-approved licenses compatible with this crate's
+# `MIT OR Apache-2.0`. Anything outside this list (e.g. a copyleft license
+# sneaking in via a new dependency) fails the check.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Unicode-3.0",
+    "Unlicense",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

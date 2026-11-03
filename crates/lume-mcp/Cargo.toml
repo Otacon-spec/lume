@@ -1,0 +1,43 @@
+[package]
+name = "lume-mcp"
+description = "Server MCP di Lume: protocollo, named pipe e catalogo dei tool"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+ignore = { workspace = true }
+lume-core = { workspace = true }
+lume-git = { workspace = true }
+lume-lsp = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["net", "io-util", "io-std", "process", "rt", "sync", "time", "macros"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+gix = { workspace = true }
+
+[dependencies.getrandom]
+version = "0.4"
+
+# UID effettivo dal kernel per la scoperta Unix; `rustix` è già nel lockfile
+# (1.1.4) tramite le dipendenze esistenti.
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1.1", default-features = false, features = ["fs", "process"] }
+
+# Solo prove: un listener con backlog 0 per saturare davvero una coda di
+# connessioni e provare la deadline del selettore senza mock.
+[target.'cfg(unix)'.dev-dependencies]
+rustix = { version = "1.1", default-features = false, features = ["net"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_System_JobObjects", "Win32_System_Threading"] }

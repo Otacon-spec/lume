@@ -1,0 +1,32 @@
+[package]
+name = "lume-ui"
+description = "Widget e presentazione riusabili: trait Tool, icone, stili, editor view"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+iced = { workspace = true }
+lume-theme = { workspace = true }
+lume-core = { workspace = true }
+lume-syntax = { workspace = true }
+lume-icons = { workspace = true }
+lume-notes = { workspace = true }
+roxmltree = { workspace = true }
+unicode-segmentation = { workspace = true }
+unicode-width = { workspace = true }
+zeroize = { workspace = true }
+
+[features]
+performance-diagnostics = []
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "file_icons"
+harness = false

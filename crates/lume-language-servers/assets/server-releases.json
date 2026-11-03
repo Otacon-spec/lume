@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "servers": [
+    {
+      "id": "rust-analyzer",
+      "name": "rust-analyzer",
+      "executable": "rust-analyzer",
+      "args": [],
+      "languages": ["rust"],
+      "extensions": ["rs"],
+      "workspace_markers": ["Cargo.toml", "rust-project.json"],
+      "resource_class": "heavy",
+      "release": {
+        "repository": "rust-lang/rust-analyzer",
+        "version": "2026-07-20",
+        "assets": [
+          {"platform":{"os":"windows","arch":"x86_64"},"name":"rust-analyzer-x86_64-pc-windows-msvc.zip","url":"https://github.com/rust-lang/rust-analyzer/releases/download/2026-07-20/rust-analyzer-x86_64-pc-windows-msvc.zip","digest":"sha256:b90bb295aeeaebd72d58d3f67bcba430a2aedbc18689434203186a767b3edc14","size":17615331,"archive":"zip","binary_path":"rust-analyzer.exe"},
+          {"platform":{"os":"linux","arch":"x86_64"},"name":"rust-analyzer-x86_64-unknown-linux-gnu.gz","url":"https://github.com/rust-lang/rust-analyzer/releases/download/2026-07-20/rust-analyzer-x86_64-unknown-linux-gnu.gz","digest":"sha256:d12f8e6df9b6d84373e80cddb67d183587a52323878e87f4fb6df91814c23d80","size":15028892,"archive":"gzip","binary_path":"rust-analyzer"},
+          {"platform":{"os":"macos","arch":"x86_64"},"name":"rust-analyzer-x86_64-apple-darwin.gz","url":"https://github.com/rust-lang/rust-analyzer/releases/download/2026-07-20/rust-analyzer-x86_64-apple-darwin.gz","digest":"sha256:2af82b65570becf6aeebce5a891a4724074c0857803dfa46f891487e06218c96","size":14709095,"archive":"gzip","binary_path":"rust-analyzer"}
+        ]
+      }
+    },
+    {
+      "id": "tombi",
+      "name": "Tombi",
+      "executable": "tombi",
+      "args": ["lsp"],
+      "languages": ["toml"],
+      "extensions": ["toml"],
+      "workspace_markers": ["tombi.toml", "pyproject.toml", "Cargo.toml"],
+      "resource_class": "light",
+      "release": {
+        "repository": "tombi-toml/tombi",
+        "version": "v1.2.4",
+        "assets": [
+          {"platform":{"os":"windows","arch":"x86_64"},"name":"tombi-cli-1.2.4-x86_64-pc-windows-msvc.zip","url":"https://github.com/tombi-toml/tombi/releases/download/v1.2.4/tombi-cli-1.2.4-x86_64-pc-windows-msvc.zip","digest":"sha256:868d5b9c41503b910fcbdb00e636a5a67c00af168444bffee7297aac3fff00ba","size":11055002,"archive":"zip","binary_path":"tombi.exe"},
+          {"platform":{"os":"linux","arch":"x86_64"},"name":"tombi-cli-1.2.4-x86_64-unknown-linux-musl.tar.gz","url":"https://github.com/tombi-toml/tombi/releases/download/v1.2.4/tombi-cli-1.2.4-x86_64-unknown-linux-musl.tar.gz","digest":"sha256:a74364d9c27835cefd9d7d9e4fee0487a7f68bc5289650e61050d6b0c395dc4d","size":8958259,"archive":"tar-gz","binary_path":"tombi"},
+          {"platform":{"os":"macos","arch":"x86_64"},"name":"tombi-cli-1.2.4-x86_64-apple-darwin.tar.gz","url":"https://github.com/tombi-toml/tombi/releases/download/v1.2.4/tombi-cli-1.2.4-x86_64-apple-darwin.tar.gz","digest":"sha256:54c94860225d348d3531a1c1ac81d86b6de315edc2640e143cfe18f2dcb0ca4d","size":8615197,"archive":"tar-gz","binary_path":"tombi"}
+        ]
+      }
+    },
+    {
+      "id": "rumdl",
+      "name": "rumdl",
+      "executable": "rumdl",
+      "args": ["server"],
+      "languages": ["markdown"],
+      "extensions": ["md", "markdown", "mdx"],
+      "workspace_markers": [".rumdl.toml", "rumdl.toml", "pyproject.toml", ".git"],
+      "resource_class": "light",
+      "release": {
+        "repository": "rvben/rumdl",
+        "version": "v0.2.39",
+        "assets": [
+          {"platform":{"os":"windows","arch":"x86_64"},"name":"rumdl-v0.2.39-x86_64-pc-windows-msvc.zip","url":"https://github.com/rvben/rumdl/releases/download/v0.2.39/rumdl-v0.2.39-x86_64-pc-windows-msvc.zip","digest":"sha256:1835ded15c359f1b92e87f12ac3a149454791a81a450334c992118810428092b","size":5917660,"archive":"zip","binary_path":"rumdl.exe"},
+          {"platform":{"os":"linux","arch":"x86_64"},"name":"rumdl-v0.2.39-x86_64-unknown-linux-gnu.tar.gz","url":"https://github.com/rvben/rumdl/releases/download/v0.2.39/rumdl-v0.2.39-x86_64-unknown-linux-gnu.tar.gz","digest":"sha256:b3a60af4bec9958d28c327f7d420d91675225675eefaeed31bec34e442c0e352","size":6052978,"archive":"tar-gz","binary_path":"rumdl"},
+          {"platform":{"os":"macos","arch":"x86_64"},"name":"rumdl-v0.2.39-x86_64-apple-darwin.tar.gz","url":"https://github.com/rvben/rumdl/releases/download/v0.2.39/rumdl-v0.2.39-x86_64-apple-darwin.tar.gz","digest":"sha256:2cef0da76487d29044496618bda1fd6869b746bbebd9126ca38f4ae6376208c7","size":5867964,"archive":"tar-gz","binary_path":"rumdl"}
+        ]
+      }
+    }
+  ]
+}

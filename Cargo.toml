@@ -1,0 +1,199 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "vendor/iced_tiny_skia"]
+exclude = ["vendor/tree-sitter"]
+
+[workspace.package]
+version = "0.4.0"
+edition = "2024"
+# oracledb 26.0.0-beta.2 chiede 1.89 (rust-version nel suo Cargo.toml); la CI la verifica.
+rust-version = "1.89"
+license = "Apache-2.0"
+# Crate interni di Lume: non vanno su crates.io. Serve anche a cargo-about
+# (about.toml, `private`) per non elencarli fra le licenze di terze parti.
+publish = false
+repository = "https://github.com/Otacon-spec/lume"
+homepage = "https://github.com/Otacon-spec/lume"
+
+[workspace.dependencies]
+# `default-features = false`, con i default di iced elencati sotto tranne
+# `linux-theme-detection`: quel default accende
+# `iced_winit/linux-theme-detection` → `mundy` → `zbus 5`, e zbus 5 è
+# «unmaintained» (RUSTSEC-2026-0370/0371/0372, nessuna versione corretta:
+# la 6 ha cambiato API e mundy 0.2.3 non la usa). Non si perde nulla:
+# `.theme()` in `main.rs` restituisce sempre il tema scelto dall'utente,
+# la finestra è `decorations: false` e nessuna subscription ascolta
+# `SystemThemeChanged`; il tema di sistema governava solo la decorazione
+# nativa (assente) e il tema di ripiego che Lume non usa.
+# `wgpu`, `tiny-skia`, `crisp`, `web-colors`, `thread-pool`, `x11`, `wayland`
+# sono i restanti default di iced 0.14.0.
+iced = { version = "0.14", default-features = false, features = [
+    "advanced",
+    "svg",
+    "canvas",
+    "tokio",
+    "wgpu",
+    "tiny-skia",
+    "crisp",
+    "web-colors",
+    "thread-pool",
+    "x11",
+    "wayland",
+] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+ropey = "1.6"
+memchr = "2.8"
+tree-sitter = "=0.26.11"
+streaming-iterator = "0.1"
+tree-sitter-rust = "0.24"
+# Pin esatti: un upgrade con una query di highlight non compilabile
+# disattiverebbe l'highlight della lingua (vedi language.rs).
+tree-sitter-md = "=0.3.2"
+tree-sitter-toml-ng = "=0.7.0"
+tree-sitter-java = "0.23.5"
+tree-sitter-c = "0.24.2"
+tree-sitter-cpp = "0.23.4"
+tree-sitter-c-sharp = "0.23.5"
+tree-sitter-python = "0.25"
+tree-sitter-javascript = "0.25"
+tree-sitter-typescript = "0.23.2"
+tree-sitter-json = "0.24.8"
+tree-sitter-yaml = "0.7.2"
+tree-sitter-html = "0.23.2"
+tree-sitter-css = "0.25"
+tree-sitter-sequel = "0.3.11"
+tree-sitter-kotlin-ng = "1.1"
+tree-sitter-xml = "0.7"
+notify = "8.2"
+rfd = "0.17"
+ignore = "0.4"
+grep-searcher = "0.1"
+grep-regex = "0.1"
+grep-matcher = "0.1"
+unicode-segmentation = "1"
+unicode-width = "0.2"
+futures = "0.3"
+tokio = { version = "1.53", features = ["rt-multi-thread", "sync", "time"] }
+rusqlite = { version = "0.39.0", features = ["bundled"] }
+directories = "6.0"
+serde_json = "1"
+jiff = "0.2"
+wait-timeout = "0.2"
+# `-no-provider` invece di un TLS con provider predefinito: altrimenti
+# `reqwest` forzerebbe `ring`, mentre `oracledb` tira dentro `aws-lc-rs`
+# (rustls con feature di default) e non lascia modo di disattivarlo. Con
+# entrambi accesi rustls non sa quale scegliere e va in panic alla prima
+# connessione TLS — inclusi i download dei language server. Un provider solo.
+# `form` serve a `entra.rs` (token Entra). In 0.13 la feature TLS senza
+# provider si chiama `rustls-no-provider` (prima `rustls-tls-webpki-roots-no-provider`).
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "json", "form", "rustls-no-provider"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+flate2 = "1"
+tar = "0.4"
+lsp-types = "0.97"
+sha2 = "0.10"
+portable-pty = "0.9.0"
+roxmltree = "0.21"
+alacritty_terminal = { version = "0.26.0", default-features = false }
+gix = { version = "0.88.0", default-features = false, features = [
+    "status",
+    "parallel",
+    "sha1",
+    # «blob-diff» per il visualizzatore di diff, «worktree-mutation» per
+    # Ripristina.
+    "blob-diff",
+    "worktree-mutation",
+    # Blame nativo (richiede anche blob-diff, già presente).
+    "blame",
+    # Fetch HTTPS via reqwest con rustls. NOTA: aggiunge
+    # gix-transport/http-client-reqwest-rust-tls che può portare
+    # reqwest/rustls-tls (ring). Se si manifesta il conflitto provider
+    # (ring + aws-lc-rs), vendorizzare gix-transport come tiberius-ng.
+    "blocking-network-client",
+    "blocking-http-transport-reqwest-rust-tls",
+    "credentials",
+    # Pull e merge nativi: gix-merge unisce due alberi,
+    # «revision» offre `Repository::merge_base`.
+    "merge",
+    "revision",
+] }
+# `tiberius-ng` di default userebbe native-tls: lo si disattiva per non
+# affiancare una seconda stack TLS a quella rustls gia' usata da reqwest.
+# Patch locale in `vendor/tiberius-ng`: radici di sistema (rustls-platform-verifier),
+# la stessa politica di reqwest.
+tiberius-ng = { version = "0.13.1", default-features = false, features = ["tds73", "rustls", "chrono", "rust_decimal"] }
+oracledb = "26.0.0-beta.2"
+tokio-util = { version = "0.7", features = ["compat"] }
+# dipendenza diretta solo per scegliere il provider crittografico in modo
+# esplicito (vedi `lume_sql::install_crypto_provider`): e' gia' nell'albero via
+# `oracledb` e `tiberius-ng`, quindi non aggiunge nulla al binario.
+rustls = { version = "0.23", default-features = false, features = ["aws-lc-rs"] }
+thiserror = "2"
+# Segreti (password, client secret, token, bozza digitata) azzerati a Drop su
+# tutta la capacità. Già nell'albero via `tiberius-ng`: nessun pacchetto nuovo.
+zeroize = "1"
+# Segreti nel vault del sistema operativo. Il facade `keyring` 4.2 non si può
+# usare con `default-features = false`: senza `v1` o `cli` il suo `lib.rs`
+# ferma la compilazione con `compile_error!`, e `v1` lega Linux a
+# `zbus-secret-service-keyring-store` → zbus 5 (RUSTSEC-2026-0370/0371/0372,
+# nessuna versione corretta). Si passa quindi a `keyring-core` con gli store
+# espliciti, come raccomanda il README di keyring; la scelta una tantum del
+# magazzino è in `crates/lume-sql/src/vault.rs`.
+keyring-core = "1.0.1"
+# Gli stessi tre backend che sceglieva la feature `v1`: Gestore credenziali su
+# Windows, Portachiavi su macOS, Secret Service su Linux. `vendored` compila
+# libdbus 1.14.4 dal sorgente: niente `libdbus-1-dev` in build né dipendenza
+# dalla versione di libdbus del sistema. `tools/ci/verifica_albero_linux.sh`
+# tiene fermi questi fatti.
+windows-native-keyring-store = "1"
+apple-native-keyring-store = { version = "1", features = ["keychain"] }
+dbus-secret-service-keyring-store = { version = "1", features = ["crypto-rust", "vendored"] }
+tempfile = "3"
+
+lume-terminal = { path = "crates/lume-terminal" }
+lume-theme = { path = "crates/lume-theme" }
+lume-core = { path = "crates/lume-core" }
+lume-syntax = { path = "crates/lume-syntax" }
+lume-ui = { path = "crates/lume-ui" }
+lume-trust = { path = "crates/lume-trust" }
+lume-store = { path = "crates/lume-store" }
+lume-git = { path = "crates/lume-git" }
+lume-sql = { path = "crates/lume-sql" }
+# Senza feature di default: il server finto scriptabile resta fuori dal
+# binario. Chi prova lume-lsp lo accende da se, essendo nei suoi default.
+lume-lsp = { path = "crates/lume-lsp", default-features = false }
+lume-icons = { path = "crates/lume-icons" }
+lume-language-servers = { path = "crates/lume-language-servers" }
+lume-notes = { path = "crates/lume-notes" }
+# Senza feature di default: il falso `jj` per i test resta fuori dal binario.
+lume-jj = { path = "crates/lume-jj", default-features = false }
+lume-mcp = { path = "crates/lume-mcp" }
+# Solo dev-dependency: gli strumenti esterni che i test richiedono (git,
+# rustc, shell PTY, tasklist/taskkill o kill) e cosa fare se mancano.
+lume-testkit = { path = "crates/lume-testkit" }
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+
+[workspace.lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+indexing_slicing = "warn"
+undocumented_unsafe_blocks = "warn"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
+
+# le dipendenze (iced, cosmic-text, tree-sitter) sono inutilizzabili a
+# opt-level 0: un minimo di ottimizzazione rende la build dev usabile
+[profile.dev.package."*"]
+opt-level = 1
+
+[patch.crates-io]
+# Stable StackNode addresses, one inline link plus unchanged eight-link overflow.
+tree-sitter = { path = "vendor/tree-sitter" }
+iced_tiny_skia = { path = "vendor/iced_tiny_skia" }
+tiberius-ng = { path = "vendor/tiberius-ng" }

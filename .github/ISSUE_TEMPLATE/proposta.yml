@@ -1,0 +1,19 @@
+name: Proposta
+description: Un'idea per Lume
+labels: ["proposta"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Che problema risolve
+    validations:
+      required: true
+  - type: textarea
+    id: soluzione
+    attributes:
+      label: Come la immagini
+  - type: textarea
+    id: costo
+    attributes:
+      label: Costo a riposo
+      description: la proposta tiene processi, thread o memoria quando non la usi? (vedi il budget nel README)

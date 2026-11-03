@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "generated_by": "tools/update_icon_themes.ps1",
+  "sources": {
+    "material": {
+      "repository": "https://github.com/material-extensions/vscode-material-icon-theme",
+      "tag": "v5.33.1",
+      "commit": "e6f371b1e54c49200ac0c6bc44e0728b487aff2d",
+      "license": "MIT",
+      "archive_sha256": "a876633ca2d4786f55f226458ed17404453015963345ec6609c9249d185018cc"
+    },
+    "catppuccin-mocha": {
+      "repository": "https://github.com/catppuccin/vscode-icons",
+      "tag": "v1.26.0",
+      "commit": "b6915da9f6889b683a110aa747de96c2820a537d",
+      "license": "MIT",
+      "archive_sha256": "66b8e5aa73c8f030dbc2aec034e6da3d659c733f5a1ab9f28f0e7e9a46a7396f"
+    }
+  },
+  "assets": {
+    "catppuccin-mocha/c-header.svg": {
+      "sha256": "c53e0e0108b8908fa618087b87fe3856ca59aa02641c9d21e036494e826b974b",
+      "upstream_path": "icons/mocha/c-header.svg"
+    },
+    "catppuccin-mocha/c.svg": {
+      "sha256": "a3f1d2e7a407fa8c93be42d691cfd0638670e5b02066a1f309feb229490302fd",
+      "upstream_path": "icons/mocha/c.svg"
+    },
+    "catppuccin-mocha/cargo.svg": {
+      "sha256": "78c0a8ad6a23f7a73bb07f151ca92822a2d62b8266f65daf3fce2bb8b73f8412",
+      "upstream_path": "icons/mocha/cargo.svg"
+    },
+    "catppuccin-mocha/cpp-header.svg": {
+      "sha256": "4805eb3b238c94686d78f8f5d470f5bb0decfed37c4c291c16359873fcadc025",
+      "upstream_path": "icons/mocha/cpp-header.svg"
+    },
+    "catppuccin-mocha/cpp.svg": {
+      "sha256": "45ea84aff6558f6028c7a876899e83542249beada92c4e29f1c92fc95e6afbcf",
+      "upstream_path": "icons/mocha/cpp.svg"
+    },
+    "catppuccin-mocha/csharp.svg": {
+      "sha256": "4f5298c2452e199076a96ddf24f157710acce5a231ca304d5c09a7685ecbb521",
+      "upstream_path": "icons/mocha/csharp.svg"
+    },
+    "catppuccin-mocha/docker.svg": {
+      "sha256": "af699121e3cae33710105f69b41746267a46fe3dfe8d2a83c929df4664297e3e",
+      "upstream_path": "icons/mocha/docker.svg"
+    },
+    "catppuccin-mocha/file.svg": {
+      "sha256": "96501f8a63e73632a782bd127c27299de3f1e8a59a2bdb7989cf2605350ea6c4",
+      "upstream_path": "icons/mocha/_file.svg"
+    },
+    "catppuccin-mocha/folder-git-open.svg": {
+      "sha256": "892356fe63cd2d8c31e0943f5dce906a401ab2b731f33a0c399ab884ea12fd87",
+      "upstream_path": "icons/mocha/folder_git_open.svg"
+    },
+    "catppuccin-mocha/folder-git.svg": {
+      "sha256": "3880e69422c6139d150530be4085e6f510e7c42f37b8532ff1d9dc82d1ca799d",
+      "upstream_path": "icons/mocha/folder_git.svg"
+    },
+    "catppuccin-mocha/folder-open.svg": {
+      "sha256": "e35c231ead1f595565426cbf84e464ff38573d8dcffcb117b58ac289f368d45a",
+      "upstream_path": "icons/mocha/_folder_open.svg"
+    },
+    "catppuccin-mocha/folder-src-open.svg": {
+      "sha256": "904e5b410600262702f0cc5f303007db1e20c09c2405a3a7780572677cba03e9",
+      "upstream_path": "icons/mocha/folder_src_open.svg"
+    },
+    "catppuccin-mocha/folder-src.svg": {
+      "sha256": "ce4b25bfe3a24ba629dff154239efc55a24fb19dba81335b2ed7b4e957c17816",
+      "upstream_path": "icons/mocha/folder_src.svg"
+    },
+    "catppuccin-mocha/folder.svg": {
+      "sha256": "9dd6d64bce489ce7e970f9c938a9d019d9d50f69bce91d2e95b4155e171f2a96",
+      "upstream_path": "icons/mocha/_folder.svg"
+    },
+    "catppuccin-mocha/git.svg": {
+      "sha256": "0e137fab2ee568c75d900f1eaf32f22dee94ecd9626be39d04fd41ba8daea343",
+      "upstream_path": "icons/mocha/git.svg"
+    },
+    "catppuccin-mocha/gradle.svg": {
+      "sha256": "e8efaf8a758e0bf448c4e41c4aa4e3799e9389b130ae7d724f97797e7ebf2f22",
+      "upstream_path": "icons/mocha/gradle.svg"
+    },
+    "catppuccin-mocha/java.svg": {
+      "sha256": "3fe2cb8a921d220b1223a1c14d3cbbc1a7310e699714a7ab58f47a6288bf3354",
+      "upstream_path": "icons/mocha/java.svg"
+    },
+    "catppuccin-mocha/license.svg": {
+      "sha256": "05ee1a480f8820601ed24455894db8f62bf88a7b2b4399ecacf99f423943a034",
+      "upstream_path": "icons/mocha/license.svg"
+    },
+    "catppuccin-mocha/markdown.svg": {
+      "sha256": "f4d2b356a5ce2fad063df6944da812e9d10b8b2c16a1610f6d225c14fb8f68fd",
+      "upstream_path": "icons/mocha/markdown.svg"
+    },
+    "catppuccin-mocha/properties.svg": {
+      "sha256": "dee4523deb941d894eb3c81d0ca7de024efbaccba5e34d4966dc0b7d1cb77dc1",
+      "upstream_path": "icons/mocha/properties.svg"
+    },
+    "catppuccin-mocha/root-open.svg": {
+      "sha256": "4e38e2a68382d62c9e60f55d7a813555b6ef85b12f973fa1f8e472b1cbf5c15a",
+      "upstream_path": "icons/mocha/_root_open.svg"
+    },
+    "catppuccin-mocha/root.svg": {
+      "sha256": "f820c0ad4f36ef82f3bb768b5571ef3b2d48d60271d87fd95244882579854565",
+      "upstream_path": "icons/mocha/_root.svg"
+    },
+    "catppuccin-mocha/rust.svg": {
+      "sha256": "42deed388dd8d8ff4e10ee3537246c89f23afa060698e43864f6079459357fae",
+      "upstream_path": "icons/mocha/rust.svg"
+    },
+    "catppuccin-mocha/toml.svg": {
+      "sha256": "a0a5733634ecc705da0104da86a2ce8193f640b124642f7fb8552966d42e22e0",
+      "upstream_path": "icons/mocha/toml.svg"
+    },
+    "catppuccin-mocha/yaml.svg": {
+      "sha256": "1548790f54bcb44b3016c9894af4821382763afc3152e0cc369d137e0c66d1a1",
+      "upstream_path": "icons/mocha/yaml.svg"
+    },
+    "material/c-header.svg": {
+      "sha256": "73fa9417071d70dcda54d5e464c292a5ba59cca3105d0e5634b8702e8bb3fd83",
+      "upstream_path": "icons/h.svg"
+    },
+    "material/c.svg": {
+      "sha256": "4adba54251e85851f3bcc78f10bfb055f17b24aad8a53d0efbd00085dd202bae",
+      "upstream_path": "icons/c.svg"
+    },
+    "material/cpp-header.svg": {
+      "sha256": "a030bcbf24e67aeddc09a9b7b0a8996387549f6105f3466d9480bd0371d60db6",
+      "upstream_path": "icons/hpp.svg"
+    },
+    "material/cpp.svg": {
+      "sha256": "336346afba3afb620b3edb5f08e0a2bcf14cb85a495113deffb3bbcc87b8aeab",
+      "upstream_path": "icons/cpp.svg"
+    },
+    "material/csharp.svg": {
+      "sha256": "5446afdcd43ba9f36691f510d411e412d63f127d91806ebbab468732ea1945e9",
+      "upstream_path": "icons/csharp.svg"
+    },
+    "material/docker.svg": {
+      "sha256": "3d032b712bbedea1dd8a1103c40cf5f27ce5b1af83ae0c9312fd15eb3c341c66",
+      "upstream_path": "icons/docker.svg"
+    },
+    "material/file.svg": {
+      "sha256": "64f5da56de591d5f429d2c7f5f5733388b3ce704762631ba0b487a08475f9452",
+      "upstream_path": "icons/document.svg"
+    },
+    "material/folder-open.svg": {
+      "sha256": "fedfb00ac5eeb7a2928808f6e3e35eaa8708a5bebd77584cd1f726676e858643",
+      "upstream_path": "icons/folder-base-open.svg"
+    },
+    "material/folder-src-open.svg": {
+      "sha256": "d4170c4df3c90eb4fc12674b6a3a521f9d7911386f560dd3d844a1b3c1f199bc",
+      "upstream_path": "icons/folder-src-open.svg"
+    },
+    "material/folder-src.svg": {
+      "sha256": "3ae5ab359030f98eeef3cb8cc8a378d23f4162655808507d1b81b2f8f6013d13",
+      "upstream_path": "icons/folder-src.svg"
+    },
+    "material/folder.svg": {
+      "sha256": "5d45d73dd7763c0d42591be860e5bccd13c0b7302edcbf582bd03679b436c609",
+      "upstream_path": "icons/folder-base.svg"
+    },
+    "material/git.svg": {
+      "sha256": "b0caee7c9cb4e602536e2f5a384740e7c8bc5ab94d98bfdde529f1eb97938213",
+      "upstream_path": "icons/git.svg"
+    },
+    "material/gradle.svg": {
+      "sha256": "81711cac2f904ab1c510ee34546776ebee1ec1831db818cd51852157636fe8c8",
+      "upstream_path": "icons/gradle.svg"
+    },
+    "material/java.svg": {
+      "sha256": "755c5b6f3fe0fb1e61e76c1a10eb96f65f59fac1b5a5a181945182639935854e",
+      "upstream_path": "icons/java.svg"
+    },
+    "material/license.svg": {
+      "sha256": "4b0a147a39eade32f9164fcd6b8465fd543cda315b71bbc9e28c236a6abf5d09",
+      "upstream_path": "icons/license.svg"
+    },
+    "material/markdown.svg": {
+      "sha256": "42f95867350ed1f349ab29b3f254405f84ae65e6d42972d74b01442027eddfcd",
+      "upstream_path": "icons/markdown.svg"
+    },
+    "material/maven.svg": {
+      "sha256": "93f742e09e3081982537cb23dcd2bd4c41c6e916bedbf4a5443ee99700fc1865",
+      "upstream_path": "icons/maven.svg"
+    },
+    "material/root-open.svg": {
+      "sha256": "9bea2cd53ed39141d889dfa7fbdc10572e166abbae747a3d7f26cca324e43143",
+      "upstream_path": "icons/folder-git-open.svg"
+    },
+    "material/root.svg": {
+      "sha256": "29f3b79316f47005356366c4086d763bd0441390c25504522415ecff1252bcb9",
+      "upstream_path": "icons/folder-git.svg"
+    },
+    "material/rust.svg": {
+      "sha256": "a58c24641e82c1ba47c74781da039e2a8e372202cfaaaeff39559138a11bcc39",
+      "upstream_path": "icons/rust.svg"
+    },
+    "material/toml.svg": {
+      "sha256": "eaeb55ba45f14a504d8f162282ec8f87c930426220ca88035bf340dc8b1e7008",
+      "upstream_path": "icons/toml.svg"
+    },
+    "material/yaml.svg": {
+      "sha256": "666b724d61cfa091cd085a465faa3727989ba5286c8ac99a6fbf5229cb6c8f9e",
+      "upstream_path": "icons/yaml.svg"
+    }
+  }
+}

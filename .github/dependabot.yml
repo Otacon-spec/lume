@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      # Pin esatti: una query di highlight non compilabile spegnerebbe
+      # l'evidenziazione della lingua (Cargo.toml, language.rs).
+      - dependency-name: tree-sitter-md
+      - dependency-name: tree-sitter-toml-ng
+      # Patch locale in vendor/tiberius-ng: un bump scollegherebbe
+      # [patch.crates-io].
+      - dependency-name: tiberius-ng
+      # Pre-release scelta a mano.
+      - dependency-name: oracledb
+    groups:
+      iced:
+        patterns:
+          - "iced*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

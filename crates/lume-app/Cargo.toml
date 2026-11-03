@@ -1,0 +1,86 @@
+[package]
+name = "lume-app"
+description = "Lume, l'IDE desktop leggero scritto in Rust con Iced"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "lume"
+path = "src/main.rs"
+
+[features]
+# Il blocco SQL (pannello Database, console, connessioni), «default-on».
+# Disattivarlo esclude il crate e i driver Azure/Oracle dal grafo Cargo.
+default = ["sql"]
+sql = ["dep:lume-sql", "dep:roxmltree"]
+# Server MCP (piano «Server MCP v1»). Feature opzionale reale: il crate entra
+# nel grafo solo con `--features mcp`; resta fuori dal default fino alla misura.
+mcp = ["dep:lume-mcp"]
+performance-diagnostics = ["lume-ui/performance-diagnostics"]
+
+[dependencies]
+iced = { workspace = true }
+lume-theme = { workspace = true }
+lume-core = { workspace = true }
+lume-syntax = { workspace = true }
+lume-ui = { workspace = true }
+lume-store = { workspace = true }
+lume-git = { workspace = true }
+lume-sql = { workspace = true, optional = true }
+lume-terminal = { workspace = true }
+lume-lsp = { workspace = true }
+lume-icons = { workspace = true }
+lume-language-servers = { workspace = true }
+lume-notes = { workspace = true }
+lume-jj = { workspace = true }
+lume-mcp = { workspace = true, optional = true }
+lsp-types = { workspace = true }
+serde_json = { workspace = true }
+rfd = { workspace = true }
+ropey = { workspace = true }
+futures = { workspace = true }
+tokio = { workspace = true }
+ignore = { workspace = true }
+jiff = { workspace = true }
+reqwest = { workspace = true }
+wait-timeout = { workspace = true }
+sha2 = { workspace = true }
+roxmltree = { workspace = true, optional = true }
+
+[target.'cfg(unix)'.dependencies]
+# Apertura readonly non bloccante: FIFO sostituita fra precheck/open non può
+# trattenere il worker. Stesso pacchetto libc già risolto nel lock tramite gix.
+libc = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+# Picco di memoria del processo via GetProcessMemoryInfo (Psapi.dll).
+# windows-sys è già nell'albero transitivamente; qui lo dichiariamo come
+# dipendenza diretta con le sole feature necessarie.
+windows-sys = { version = "0.61", features = [
+    "Win32_System_ProcessStatus",
+    "Win32_System_Threading",
+    # Identità/nomi nativi per rifiutare alias/hardlink SaveAs di altre schede.
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+    "Win32_Globalization",
+] }
+
+# Icona e informazioni di versione di lume.exe (build.rs). Solo per la build:
+# non entra nel binario, e about.toml ignora le build-dependencies.
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1.31"
+
+[dev-dependencies]
+# Per guidare nei test i Task Iced reali, senza un runtime UI simulato.
+iced_runtime = "=0.14.0"
+iced_tiny_skia = "=0.14.0"
+tempfile = { workspace = true }
+lume-testkit = { workspace = true }
+
+[lints]
+workspace = true

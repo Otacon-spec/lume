@@ -1,0 +1,196 @@
+name: Piattaforme
+
+on:
+  workflow_call:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RUST_TOOLCHAIN: "1.96.0"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linux:
+    name: Linux (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      LUME_TEST_RICHIEDI_STRUMENTI: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Librerie di sistema
+        run: |
+          sudo apt-get update
+          # build-essential serve a libdbus-sys `vendored` (vault su Linux);
+          # non serve libdbus-1-dev.
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libwayland-dev libxkbcommon-dev libxkbcommon-x11-0 libx11-dev gnome-keyring xvfb xauth x11-utils
+      - name: Toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component clippy
+          rustup default "$RUST_TOOLCHAIN"
+      - uses: Swatinem/rust-cache@v2
+      - name: Jujutsu per le prove d'integrazione reali
+        run: |
+          cargo install jj-cli --version 0.45.1 --locked --root "$RUNNER_TEMP/jj-cli"
+          echo "$RUNNER_TEMP/jj-cli/bin" >> "$GITHUB_PATH"
+      - name: Guardia albero Linux keyring
+        run: bash tools/ci/verifica_albero_linux.sh
+      - name: Cassaforte di sistema Linux
+        run: |
+          dbus-run-session -- timeout 90s bash -euo pipefail -c '
+            tmp=$(mktemp -d "${RUNNER_TEMP:-/tmp}/lume-keyring.XXXXXX")
+            export XDG_DATA_HOME="$tmp/data"
+            mkdir -m 700 -p "$XDG_DATA_HOME" "$tmp/control"
+            eval "$(printf "%s\\n" "lume-ci-test-only" | gnome-keyring-daemon --control-directory="$tmp/control" --unlock --components=secrets)"
+            LUME_REQUIRE_SYSTEM_VAULT=1 cargo test -p lume-sql --lib vault::tests::un_giro_completo_contro_la_cassaforte_del_sistema --locked
+          '
+      - name: Identità git per i test
+        run: |
+          git config --global user.name "lume-ci"
+          git config --global user.email "lume-ci@users.noreply.github.com"
+      - name: Compilazione (tutti i target, tutte le feature)
+        run: cargo check --workspace --all-targets --locked --all-features
+      - name: Feature SQL disattivata su Linux
+        run: |
+          set -euo pipefail
+          tree=$(cargo tree -p lume-app --no-default-features --locked --edges normal --prefix none)
+          if printf '%s\n' "$tree" | grep -E '^(lume-sql|tiberius-ng|oracledb) v'; then
+            echo "Il backend SQL è ancora nel grafo senza la feature sql" >&2
+            exit 1
+          fi
+          cargo check -p lume-app --all-targets --no-default-features --locked
+          cargo build -p lume-git --bin lume-git-supervisor --locked
+          cargo test -p lume-app --all-targets --no-default-features --locked
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --no-deps --locked -- -D warnings
+      - name: Test
+        run: cargo test --workspace --locked --all-features
+      - name: Test d'integrazione Jujutsu reale
+        run: cargo test -p lume-jj --test jj_reale --locked -- --ignored
+      - name: Build GUI per la prova Xvfb
+        run: cargo build -p lume-app --bin lume --locked --all-features
+      - name: Avvio GUI Linux sotto Xvfb
+        run: bash tools/ci/verifica_avvio_gui_linux.sh target/debug/lume
+      - name: Prova del verificatore di pacchetti
+        run: bash tools/test_verifica_pacchetto_unix.sh
+      - name: Prova dell'ingresso release
+        run: bash tools/test_ingresso_release_unix.sh
+
+  pacchetto-linux:
+    name: Pacchetto Linux x86_64
+    needs: linux
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Librerie di sistema
+        run: |
+          sudo apt-get update
+          # build-essential serve a libdbus-sys `vendored` del vault.
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libwayland-dev libxkbcommon-dev libxkbcommon-x11-0 libx11-dev
+      - name: Toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - uses: Swatinem/rust-cache@v2
+      - name: Regressione rimappatura percorsi personali
+        run: bash tools/test_pacchetto_unix_path_remap.sh
+      - name: Pacchetto
+        run: bash tools/pacchetto_unix.sh linux-x86_64
+      - name: Verifica del pacchetto
+        run: bash tools/verifica_pacchetto_unix.sh artifacts/lume-*-linux-x86_64-*.tar.gz
+      - name: Prova crash log sul pacchetto
+        run: bash tools/test_crash_log_pacchetto_unix.sh artifacts/lume-*-linux-x86_64-*.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lume-linux-x86_64
+          path: |
+            artifacts/lume-*-linux-x86_64-*.tar.gz
+            artifacts/lume-*-linux-x86_64-*.tar.gz.sha256
+            artifacts/lume-*-linux-x86_64-*.tar.gz.MANIFEST.json
+          if-no-files-found: error
+
+  macos:
+    name: macOS (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            machine: arm64
+            arch: aarch64
+          - runner: macos-15-intel
+            machine: x86_64
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      LUME_TEST_RICHIEDI_STRUMENTI: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verifica architettura del runner
+        run: test "$(uname -m)" = "${{ matrix.machine }}"
+      - name: Toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component clippy
+          rustup default "$RUST_TOOLCHAIN"
+      - uses: Swatinem/rust-cache@v2
+      - name: Identità git per i test
+        run: |
+          git config --global user.name "lume-ci"
+          git config --global user.email "lume-ci@users.noreply.github.com"
+      - name: Keychain temporaneo per Secret Store
+        run: |
+          keychain="$RUNNER_TEMP/lume-test.keychain-db"
+          passphrase="lume-ci-test-only"
+          security create-keychain -p "$passphrase" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$passphrase" "$keychain"
+          security list-keychains -d user -s "$keychain"
+          security default-keychain -d user -s "$keychain"
+          echo "LUME_TEST_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+      - name: Cassaforte di sistema macOS
+        run: LUME_REQUIRE_SYSTEM_VAULT=1 cargo test -p lume-sql --lib vault::tests::un_giro_completo_contro_la_cassaforte_del_sistema --locked
+      - name: Compilazione
+        run: cargo check --workspace --all-targets --locked --all-features
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked --all-features -- -D warnings
+      - name: Test
+        run: cargo test --workspace --locked --all-features
+      - name: Regressione rimappatura percorsi personali
+        run: bash tools/test_pacchetto_unix_path_remap.sh
+      - name: Pacchetto macOS
+        run: bash tools/pacchetto_unix.sh "macos-${{ matrix.arch }}"
+      - name: Verifica del pacchetto e crash log macOS
+        shell: bash
+        env:
+          LUME_PACKAGE_ARCH: ${{ matrix.arch }}
+        run: |
+          shopt -s nullglob
+          archivi=(artifacts/lume-*-macos-"$LUME_PACKAGE_ARCH"-*.tar.gz)
+          if (( ${#archivi[@]} != 1 )) || [[ ! -f "${archivi[0]:-}" ]]; then
+            printf 'Atteso un solo archivio regolare macOS %s, trovati %s\n' "$LUME_PACKAGE_ARCH" "${#archivi[@]}" >&2
+            exit 1
+          fi
+          bash tools/verifica_pacchetto_unix.sh "${archivi[0]}"
+          bash tools/test_crash_log_pacchetto_unix.sh "${archivi[0]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lume-macos-${{ matrix.arch }}
+          path: |
+            artifacts/lume-*-macos-${{ matrix.arch }}-*.tar.gz
+            artifacts/lume-*-macos-${{ matrix.arch }}-*.tar.gz.sha256
+            artifacts/lume-*-macos-${{ matrix.arch }}-*.tar.gz.MANIFEST.json
+          if-no-files-found: error
+      - name: Rimuove il Keychain temporaneo
+        if: always()
+        run: |
+          if [[ -n "${LUME_TEST_KEYCHAIN:-}" ]]; then
+            security delete-keychain "$LUME_TEST_KEYCHAIN" || true
+          fi

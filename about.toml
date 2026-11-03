@@ -1,0 +1,509 @@
+# Configurazione di cargo-about: genera THIRD_PARTY_LICENSES.md, i testi di
+# licenza di ogni crate che finisce nel binario distribuito.
+#
+#   cargo about generate -c about.toml about.hbs -o THIRD_PARTY_LICENSES.md
+#
+# Da rigenerare quando cambia Cargo.lock. Una licenza nuova fuori da questo
+# elenco fa fallire la generazione: va valutata, non aggiunta alla cieca.
+accepted = [
+    # Preferita quando il crate la offre come alternativa: alcuni pacchetti
+    # non distribuiscono un file MIT con il titolare e cargo-about usa il
+    # segnaposto generico. L'insieme delle licenze accettate resta invariato.
+    "Zlib",
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD",
+    "ISC",
+    "Unlicense",
+    "Unicode-3.0",
+    "BSL-1.0",
+    "CC0-1.0",
+]
+
+# Titolari veri al posto dei testi generici: chrono ha un workaround
+# integrato in cargo-about 0.9.2.
+workarounds = ["chrono"]
+
+# Target distribuiti: Windows x64, Linux x86_64, macOS Intel e Apple Silicon.
+targets = [
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+]
+
+# Né le dipendenze di build né quelle di test finiscono nell'eseguibile.
+ignore-build-dependencies = true
+ignore-dev-dependencies = true
+
+# I crate privati di Lume (publish=false) usano LICENSE/NOTICE Apache-2.0.
+# Il renderer vendorizzato conserva la propria licenza MIT e resta nel report.
+private = { ignore = true }
+
+# Licenze accettate crate per crate, non per tutto l'albero: ognuna serve a
+# un crate solo.
+# - option-ext (via directories): MPL-2.0, copyleft debole a livello di file;
+#   il sorgente resta quello pubblicato su crates.io, non modificato.
+[option-ext]
+accepted = ["MPL-2.0"]
+
+# libdbus-sys dichiara «Apache-2.0/MIT» e include i due testi nel pacchetto;
+# senza clarify cargo-about pesca l'intestazione MIT di un header C del vendor.
+[libdbus-sys.clarify]
+license = "MIT"
+[[libdbus-sys.clarify.files]]
+path = "LICENSE-MIT"
+checksum = "de3911c2d98c8bd2d701ee721347053d9b55995a11f9a8c955e44d3ca1b376bf"
+
+# `objc-sys 0.3.5` pubblica il commit che contiene questo MIT completo.
+[objc-sys.clarify]
+license = "MIT"
+[[objc-sys.clarify.git]]
+path = "LICENSE.txt"
+checksum = "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5"
+
+# - webpki-roots: le radici dei certificati di Mozilla, licenza per dati.
+[webpki-roots]
+accepted = ["CDLA-Permissive-2.0"]
+
+# - oracledb è «UPL-1.0 OR Apache-2.0»: basta Apache-2.0, UPL non serve.
+#
+# - zune-core è «MIT OR Apache-2.0 OR Zlib» e non include un file di licenza nel
+#   pacchetto. La preferenza Zlib sopra evita il MIT generico; il testo completo
+#   e l'attribuzione upstream restano anche nella sezione fissa di about.hbs.
+
+# Il LICENSE composito di aws-lc-sys, con tutti i titolari.
+[aws-lc-sys.clarify]
+license = "ISC AND (Apache-2.0 OR ISC) AND Apache-2.0 AND MIT AND BSD-3-Clause AND (Apache-2.0 OR ISC OR MIT) AND (Apache-2.0 OR ISC OR MIT-0)"
+[[aws-lc-sys.clarify.files]]
+path = "LICENSE"
+checksum = "728536b4160e051f86d7c9c388f704866b3d512cd7df97ac3516c65279523c4e"
+
+# Titolari veri: testi di licenza dei crate col MIT generico. Generato
+# con clarify_licenze.py e riletto; quelli senza file nel pacchetto leggono
+# il testo dal repository, al commit pubblicato in .cargo_vcs_info.json.
+[dpi.clarify]
+license = "Apache-2.0 AND MIT"
+[[dpi.clarify.files]]
+path = "LICENSE"
+checksum = "6dc0e068dcf3a5bc8e054205b85b7720e1d49265bbc64bf515d2cf79197df69a"
+[[dpi.clarify.files]]
+path = "LICENSE-LIBM-MIT"
+checksum = "9eff396a99bafd208e7126602420d6864f6066c08b84485a5b032320a9c01997"
+license = "MIT"
+
+# Il pacchetto usa un testo MIT valido ma cargo-about non riconosce la forma
+# senza intestazione standard; conserva il titolare originale da LICENSE.txt.
+[wayland-protocols-plasma.clarify]
+license = "MIT"
+[[wayland-protocols-plasma.clarify.files]]
+path = "LICENSE.txt"
+checksum = "1cb6f4dee8c649f175736380495f0af0c753c87f22d50931692968bb24bf2161"
+
+[iced_core.clarify]
+license = "MIT"
+[[iced_core.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_debug.clarify]
+license = "MIT"
+[[iced_debug.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_futures.clarify]
+license = "MIT"
+[[iced_futures.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_graphics.clarify]
+license = "MIT"
+[[iced_graphics.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_program.clarify]
+license = "MIT"
+[[iced_program.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_renderer.clarify]
+license = "MIT"
+[[iced_renderer.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_runtime.clarify]
+license = "MIT"
+[[iced_runtime.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_tiny_skia.clarify]
+license = "MIT"
+[[iced_tiny_skia.clarify.files]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_wgpu.clarify]
+license = "MIT"
+[[iced_wgpu.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_widget.clarify]
+license = "MIT"
+[[iced_widget.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[iced_winit.clarify]
+license = "MIT"
+[[iced_winit.clarify.git]]
+path = "LICENSE"
+checksum = "fc9086ba4eba4b77e4c603906362742bc3715ffa2c7810c6074fe7780d3a0398"
+
+[libm.clarify]
+license = "MIT"
+[[libm.clarify.files]]
+path = "LICENSE.txt"
+checksum = "3823dda7cf046602f4b4e77ec8e227863dc4736037cc85bb33d9f19febe16bb7"
+
+[lyon.clarify]
+license = "MIT OR Apache-2.0"
+[[lyon.clarify.git]]
+path = "LICENSE-MIT"
+checksum = "80f275e90d799911ed3830a7f242a2ef5a4ade2092fe0aa07bfb2d2cf2f2b95e"
+license = "MIT"
+
+[lyon_algorithms.clarify]
+license = "MIT OR Apache-2.0"
+[[lyon_algorithms.clarify.git]]
+path = "LICENSE-MIT"
+checksum = "80f275e90d799911ed3830a7f242a2ef5a4ade2092fe0aa07bfb2d2cf2f2b95e"
+license = "MIT"
+
+[lyon_geom.clarify]
+license = "MIT OR Apache-2.0"
+[[lyon_geom.clarify.git]]
+path = "LICENSE-MIT"
+checksum = "80f275e90d799911ed3830a7f242a2ef5a4ade2092fe0aa07bfb2d2cf2f2b95e"
+license = "MIT"
+
+[lyon_path.clarify]
+license = "MIT OR Apache-2.0"
+[[lyon_path.clarify.git]]
+path = "LICENSE-MIT"
+checksum = "80f275e90d799911ed3830a7f242a2ef5a4ade2092fe0aa07bfb2d2cf2f2b95e"
+license = "MIT"
+
+[lyon_tessellation.clarify]
+license = "MIT OR Apache-2.0"
+[[lyon_tessellation.clarify.git]]
+path = "LICENSE-MIT"
+checksum = "80f275e90d799911ed3830a7f242a2ef5a4ade2092fe0aa07bfb2d2cf2f2b95e"
+license = "MIT"
+
+[profiling.clarify]
+license = "MIT OR Apache-2.0"
+[[profiling.clarify.git]]
+path = "LICENSE-MIT"
+checksum = "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333"
+license = "MIT"
+
+[siphasher.clarify]
+license = "MIT OR Apache-2.0"
+[[siphasher.clarify.files]]
+path = "COPYING"
+checksum = "c962ee4d1d05ddc138b202b2540219ebc57893fcf97b364852094a9a94ce1365"
+
+[svg_fmt.clarify]
+license = "MIT OR Apache-2.0"
+[[svg_fmt.clarify.git]]
+path = "LICENSE"
+checksum = "7e98bed7f100747aaae7d82ab94fbe6b76fd6b84b09a3aaa413bff8196d0fbb1"
+
+[tree-sitter-cpp.clarify]
+license = "MIT"
+[[tree-sitter-cpp.clarify.git]]
+path = "LICENSE"
+checksum = "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1"
+
+[tree-sitter-html.clarify]
+license = "MIT"
+[[tree-sitter-html.clarify.git]]
+path = "LICENSE"
+checksum = "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1"
+
+[tree-sitter-java.clarify]
+license = "MIT"
+[[tree-sitter-java.clarify.git]]
+path = "LICENSE"
+checksum = "52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7"
+
+[tree-sitter-json.clarify]
+license = "MIT"
+[[tree-sitter-json.clarify.git]]
+path = "LICENSE"
+checksum = "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1"
+
+[tree-sitter-kotlin-ng.clarify]
+license = "MIT"
+[[tree-sitter-kotlin-ng.clarify.git]]
+path = "LICENSE"
+checksum = "0eea8dc45e89deeb03c7799bbbc7b4688f365fb274562f4540ecfebdea82e727"
+
+[tree-sitter-md.clarify]
+license = "MIT"
+[[tree-sitter-md.clarify.git]]
+path = "LICENSE"
+checksum = "52ec8a1bf8256511e2a92613e0bb41ffefba3897f16fa958d7bb28c466dd4804"
+
+[tree-sitter-toml-ng.clarify]
+license = "MIT"
+[[tree-sitter-toml-ng.clarify.git]]
+path = "LICENSE"
+checksum = "b727eee929bee836e8102cecf749a795b199f291b58c885bcd81cae727ac5a46"
+
+[tree-sitter-typescript.clarify]
+license = "MIT"
+[[tree-sitter-typescript.clarify.git]]
+path = "LICENSE"
+checksum = "49bf33cf78ef5897e4e161ce1517df7de1ae5042a65b6bcfd44401e0fc606559"
+
+[tree-sitter-xml.clarify]
+license = "MIT"
+[[tree-sitter-xml.clarify.git]]
+path = "LICENSE"
+checksum = "3297073719030b7261afd78b7267931ccc03a27f7a65ca6fc644316180f71bf6"
+
+[whoami.clarify]
+license = "Apache-2.0 OR BSL-1.0 OR MIT"
+[[whoami.clarify.files]]
+path = "LICENSE_APACHE"
+checksum = "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+license = "Apache-2.0"
+[[whoami.clarify.files]]
+path = "LICENSE_BOOST"
+checksum = "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+license = "BSL-1.0"
+[[whoami.clarify.files]]
+path = "LICENSE_MIT"
+checksum = "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1"
+license = "MIT"
+
+[windows.clarify]
+license = "MIT OR Apache-2.0"
+[[windows.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-core.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-core.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-core.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-implement.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-implement.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-implement.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-interface.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-interface.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-interface.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-link.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-link.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-link.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-result.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-result.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-result.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-strings.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-strings.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-strings.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-sys.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-sys.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-sys.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-targets.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-targets.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows-targets.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+# I crate windows-rs recenti usano gli stessi file licenza del pacchetto.
+# La precisazione impedisce a cargo-about di sostituire il testo Microsoft con
+# il MIT generico: checksum verificato sui pacchetti del lockfile corrente.
+[windows-collections.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-collections.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-future.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-future.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-numerics.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-numerics.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows-threading.clarify]
+license = "MIT OR Apache-2.0"
+[[windows-threading.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows_x86_64_gnu.clarify]
+license = "MIT OR Apache-2.0"
+[[windows_x86_64_gnu.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[windows_x86_64_msvc.clarify]
+license = "MIT OR Apache-2.0"
+[[windows_x86_64_msvc.clarify.files]]
+path = "license-apache-2.0"
+checksum = "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+license = "Apache-2.0"
+[[windows_x86_64_msvc.clarify.files]]
+path = "license-mit"
+checksum = "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+license = "MIT"
+
+[zune-jpeg.clarify]
+license = "MIT OR Apache-2.0 OR Zlib"
+[[zune-jpeg.clarify.git]]
+path = "LICENSE.md"
+checksum = "c6dff146a9f31848ac296faa5a08a4253caf2c384c86f906dc99e7fc0a39cc8c"
+
+# A mano: il repository ha il testo in un percorso che lo script non prova.
+[gpu-alloc.clarify]
+license = "MIT OR Apache-2.0"
+[[gpu-alloc.clarify.git]]
+path = "license/MIT"
+checksum = "f774bf68151714985324d90adbd59e8f271b7ba518608d871b6ba16464692879"
+license = "MIT"
+[[gpu-alloc.clarify.git]]
+path = "license/APACHE"
+checksum = "58317934bf818c379e4215fad7e8dfb6812edff32c9557b8b039343f69711e08"
+license = "Apache-2.0"
+
+[gpu-alloc-types.clarify]
+license = "MIT OR Apache-2.0"
+[[gpu-alloc-types.clarify.git]]
+path = "license/MIT"
+checksum = "f774bf68151714985324d90adbd59e8f271b7ba518608d871b6ba16464692879"
+license = "MIT"
+[[gpu-alloc-types.clarify.git]]
+path = "license/APACHE"
+checksum = "58317934bf818c379e4215fad7e8dfb6812edff32c9557b8b039343f69711e08"
+license = "Apache-2.0"
+
+[gpu-descriptor.clarify]
+license = "MIT OR Apache-2.0"
+[[gpu-descriptor.clarify.git]]
+path = "license/MIT"
+checksum = "5226e27d5fbc683db56c52853cdb9d15b69abadb525a60f95c862c2dbd77cdc8"
+license = "MIT"
+[[gpu-descriptor.clarify.git]]
+path = "license/APACHE"
+checksum = "6bec8c944a6d4251be50ac86bb4ca360bcce5aea472505dee2800e160bf1cdbf"
+license = "Apache-2.0"
+
+[gpu-descriptor-types.clarify]
+license = "MIT OR Apache-2.0"
+[[gpu-descriptor-types.clarify.git]]
+path = "license/MIT"
+checksum = "5226e27d5fbc683db56c52853cdb9d15b69abadb525a60f95c862c2dbd77cdc8"
+license = "MIT"
+[[gpu-descriptor-types.clarify.git]]
+path = "license/APACHE"
+checksum = "6bec8c944a6d4251be50ac86bb4ca360bcce5aea472505dee2800e160bf1cdbf"
+license = "Apache-2.0"
+
+[tiberius-ng-macros.clarify]
+license = "MIT OR Apache-2.0"
+[[tiberius-ng-macros.clarify.git]]
+path = "LICENSE-MIT.txt"
+checksum = "2e9c4e8b1bb2e73696358b5b1d74d3d56403d33da333e70aa504c9b1d7b4bdd0"
+license = "MIT"
+[[tiberius-ng-macros.clarify.git]]
+path = "LICENSE-APACHE.txt"
+checksum = "c2a9e81ba38cb9f123fc04c71bb8bc55d8736fb26f393254396164399ed6faa7"
+license = "Apache-2.0"

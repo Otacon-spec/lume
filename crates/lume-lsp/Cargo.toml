@@ -1,0 +1,82 @@
+[package]
+name = "lume-lsp"
+description = "Client Language Server Protocol generico, indipendente dal server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+# Il server finto scriptabile: acceso di default cosi' `cargo test` lo trova
+# senza flag, e spento da `lume-app`, che non ne ha bisogno — i suoi test
+# iniettano i messaggi a mano, senza sottoprocessi.
+default = ["testing"]
+testing = []
+
+[dependencies]
+ropey = { workspace = true }
+memchr = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["fs", "io-util", "macros", "process"] }
+lsp-types = { workspace = true }
+sha2 = { workspace = true }
+lume-trust = { workspace = true }
+
+[[test]]
+name = "server_process"
+path = "tests/server_process.rs"
+harness = false
+
+[[test]]
+name = "session"
+path = "tests/session.rs"
+harness = false
+
+[[test]]
+name = "actor"
+path = "tests/actor.rs"
+harness = false
+required-features = ["testing"]
+
+[[test]]
+name = "features"
+path = "tests/features.rs"
+harness = false
+
+[[test]]
+name = "thread_budget"
+path = "tests/thread_budget.rs"
+harness = false
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Globalization",
+    "Win32_Security",
+    "Win32_System_JobObjects",
+    "Win32_System_Pipes",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+] }
+
+[target.'cfg(windows)'.dev-dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_Threading",
+] }
+
+[dev-dependencies]
+lume-testkit = { workspace = true }
+
+[lints]
+workspace = true

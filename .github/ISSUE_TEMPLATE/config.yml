@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Vulnerabilità di sicurezza
+    url: https://github.com/Otacon-spec/lume/security/advisories/new
+    about: segnalale in privato, non con una issue pubblica (vedi SECURITY.md)

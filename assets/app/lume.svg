@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lume: una lampada illumina la L azzurra">
+  <defs>
+    <linearGradient id="fascio" gradientUnits="userSpaceOnUse" x1="42" y1="20" x2="26" y2="42">
+      <stop stop-color="#ffe7a3" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#ffe7a3" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="paralume" gradientUnits="userSpaceOnUse" x1="44" y1="10" x2="44" y2="24">
+      <stop stop-color="#a1b4cf"/><stop offset="1" stop-color="#597090"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="#23262c" stroke="#33373f" stroke-width="2"/>
+  <path d="M21 18v28h25" fill="none" stroke="#61a8f2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 16 46 24 42 48 17 27Z" fill="url(#fascio)"/>
+  <path d="M48 31 54 23 48 15" fill="none" stroke="#8096b3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="48" cy="33" rx="7" ry="2" fill="#8096b3"/>
+  <circle cx="54" cy="23" r="2" fill="#a1b4cf"/>
+  <path d="M38 16 44 10 50 16 46 24Z" fill="url(#paralume)"/>
+  <ellipse cx="42" cy="20" rx="5.7" ry="1.7" transform="rotate(45 42 20)" fill="#ffe7a3"/>
+</svg>

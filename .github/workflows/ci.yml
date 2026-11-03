@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:  # avvio manuale: serve se la CI resta spenta su push nel repo privato
+  workflow_call:  # la release richiede gli stessi controlli prima di pubblicare
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Toolchain fissata: una versione nuova di clippy con lint nuovi non deve
+  # far diventare rossa una PR che non li tocca. Si aggiorna a mano.
+  RUST_TOOLCHAIN: "1.96.0"
+
+jobs:
+  verifica:
+    name: fmt, clippy, test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup toolchain install $env:RUST_TOOLCHAIN --profile minimal --component rustfmt --component clippy
+          rustup default $env:RUST_TOOLCHAIN
+      - uses: Swatinem/rust-cache@v2
+      - name: Identità git per i test di lume-git
+        run: |
+          git config --global user.name "lume-ci"
+          git config --global user.email "lume-ci@users.noreply.github.com"
+      - run: cargo fmt --all --check
+      - name: Ogni unsafe ha il suo SAFETY
+        shell: bash
+        run: bash tools/verifica-safety.sh
+      - name: Convenzioni del codice
+        shell: bash
+        run: bash tools/verifica-convenzioni.sh
+      - run: cargo clippy --workspace --all-targets --no-deps --locked -- -D warnings
+      - name: "Test (modalità rigida: uno strumento mancante fa fallire, non saltare)"
+        env:
+          LUME_TEST_RICHIEDI_STRUMENTI: "1"
+        run: cargo test --workspace --locked
+      - name: Test pixel del renderer vendorizzato
+        run: cargo test -p iced_tiny_skia --lib --all-features --locked
+      - name: Clippy del renderer vendorizzato
+        run: cargo clippy -p iced_tiny_skia --all-targets --all-features --locked -- -D warnings
+      - name: "Feature SQL disattivata: il backend deve uscire dal grafo"
+        shell: pwsh
+        env:
+          LUME_TEST_RICHIEDI_STRUMENTI: "1"
+        run: |
+          $backend = cargo tree -p lume-app --no-default-features --locked --edges normal --prefix none | Select-String -Pattern '^(lume-sql|tiberius-ng|oracledb) v'
+          if ($backend) { throw "Il backend SQL è ancora nel grafo senza la feature sql:`n$backend" }
+          cargo check -p lume-app --bin lume --no-default-features --locked
+          cargo test -p lume-app --all-targets --no-default-features --locked
+      - name: Clippy della feature MCP opzionale
+        run: cargo clippy -p lume-app --features mcp --all-targets --no-deps --locked -- -D warnings
+      - name: Test della feature MCP opzionale
+        env:
+          LUME_TEST_RICHIEDI_STRUMENTI: "1"
+        run: cargo test -p lume-app --all-targets --features mcp --locked
+      - name: Feature MCP senza SQL
+        shell: pwsh
+        env:
+          LUME_TEST_RICHIEDI_STRUMENTI: "1"
+        run: |
+          $graph = cargo tree -p lume-app --no-default-features --features mcp --locked --edges normal --prefix none
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $backend = $graph | Select-String -Pattern '^(lume-sql|tiberius-ng|oracledb) v'
+          if ($backend) { throw "Il backend SQL è nel grafo MCP senza sql:`n$backend" }
+          cargo check -p lume-app --all-targets --no-default-features --features mcp --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy -p lume-app --all-targets --no-default-features --features mcp --no-deps --locked -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test -p lume-app --all-targets --no-default-features --features mcp --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  licenze:
+    name: licenze e supply chain
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.2,cargo-deny
+      - name: THIRD_PARTY_LICENSES.md aggiornato rispetto a Cargo.lock
+        run: |
+          cargo about generate -c about.toml about.hbs -o THIRD_PARTY_LICENSES.md
+          $path = "THIRD_PARTY_LICENSES.md"
+          $text = [System.IO.File]::ReadAllText($path)
+          $text = $text -replace "`r`n", "`n"
+          $text = [System.Text.RegularExpressions.Regex]::Replace($text, '[ \t]+(?=\n|$)', '')
+          [System.IO.File]::WriteAllText($path, $text, [System.Text.UTF8Encoding]::new($false))
+          git diff --exit-code -- THIRD_PARTY_LICENSES.md
+      - run: cargo deny check
+
+  msrv:
+    name: MSRV (rust-version di Cargo.toml)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain MSRV
+        shell: pwsh
+        run: |
+          $msrv = (Select-String -Path Cargo.toml -Pattern '^rust-version = "(.+)"').Matches[0].Groups[1].Value
+          rustup toolchain install $msrv --profile minimal
+          "MSRV=$msrv" >> $env:GITHUB_ENV
+      - uses: Swatinem/rust-cache@v2
+      - name: "MSRV: configurazioni delle feature"
+        shell: pwsh
+        run: |
+          cargo "+$env:MSRV" check --workspace --all-targets --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo "+$env:MSRV" check --workspace --all-targets --all-features --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo "+$env:MSRV" check -p lume-app --all-targets --no-default-features --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo "+$env:MSRV" check -p lume-app --all-targets --no-default-features --features mcp --locked
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  dimensione:
+    # Solo informativo (il peso del binario non è un vincolo, contano le risorse a runtime):
+    # nessuna soglia, e il passo che scrive il riepilogo non fa mai fallire il job.
+    name: byte di lume.exe (informativo)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup toolchain install $env:RUST_TOOLCHAIN --profile minimal
+          rustup default $env:RUST_TOOLCHAIN
+      - uses: Swatinem/rust-cache@v2
+      - name: Build di release con i percorsi rimappati
+        shell: pwsh
+        run: ./tools/build_release_bundle.ps1 -SoloExe
+      - name: Byte di lume.exe nel riepilogo del job
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $byte = (Get-Item target/release/lume.exe).Length
+          $mib = [math]::Round($byte / 1MB, 2)
+          "### Binario di release`n`n$byte B = $mib MiB. Informazione, nessuna soglia." >> $env:GITHUB_STEP_SUMMARY

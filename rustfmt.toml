@@ -1,0 +1,2 @@
+# Col default `Auto` rustfmt --check passa anche su file CRLF.
+newline_style = "Unix"

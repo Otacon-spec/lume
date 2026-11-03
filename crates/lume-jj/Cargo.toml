@@ -1,0 +1,48 @@
+[package]
+name = "lume-jj"
+description = "Integrazione Jujutsu opzionale tramite il comando `jj`"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Pipes"] }
+
+[dev-dependencies]
+lume-testkit = { path = "../lume-testkit" }
+tempfile = { workspace = true }
+
+[features]
+default = ["testing"]
+testing = []
+
+[[bin]]
+name = "fake-jj"
+path = "tests/support/fake_jj.rs"
+required-features = ["testing"]
+test = false
+
+[[test]]
+name = "cli"
+path = "tests/cli.rs"
+required-features = ["testing"]
+
+[[test]]
+name = "workspace"
+path = "tests/workspace.rs"
+required-features = ["testing"]
+
+[lints]
+workspace = true

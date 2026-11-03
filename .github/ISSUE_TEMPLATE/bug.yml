@@ -1,0 +1,35 @@
+name: Problema
+description: Qualcosa non funziona come dovrebbe
+labels: ["bug"]
+body:
+  - type: input
+    id: versione
+    attributes:
+      label: Versione di Lume
+      description: Aiuto → Informazioni su Lume, poi «Copia»
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Versione di Windows
+      description: il risultato di `winver`
+    validations:
+      required: true
+  - type: textarea
+    id: passi
+    attributes:
+      label: Passi per riprodurre
+    validations:
+      required: true
+  - type: textarea
+    id: atteso
+    attributes:
+      label: Cosa ti aspettavi e cosa è successo
+    validations:
+      required: true
+  - type: textarea
+    id: crash
+    attributes:
+      label: Log del crash
+      description: se Lume si è chiuso da solo, l'ultimo file di %LOCALAPPDATA%\lume\Lume\data\logs\

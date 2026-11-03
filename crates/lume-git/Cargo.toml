@@ -1,0 +1,39 @@
+[package]
+name = "lume-git"
+description = "Integrazione Git nativa di Lume basata su gitoxide"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "lume-git-supervisor"
+path = "src/bin/lume-git-supervisor.rs"
+
+[dependencies]
+gix = { workspace = true }
+lume-core = { workspace = true }
+thiserror = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_JobObjects",
+    "Win32_System_Pipes",
+    "Win32_System_Threading",
+] }
+
+[dev-dependencies]
+lume-testkit = { workspace = true }
+tempfile = { workspace = true }
+
+[lints]
+workspace = true
