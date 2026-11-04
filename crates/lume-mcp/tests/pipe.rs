@@ -112,7 +112,11 @@ async fn il_file_di_scoperta_vive_finche_vive_il_server() {
     *discovery_dir = Some(dati.path().to_path_buf());
     let (tx, mut eventi) = tokio::sync::mpsc::unbounded_channel();
     let compito = tokio::spawn(serve(config, tx));
-    assert!(matches!(eventi.recv().await, Some(McpEvent::Ready(_))));
+    // Il mittente dei comandi resta vivo: lasciarlo cadere vuol dire «l'app
+    // è uscita» e il server si chiude prima della connessione di prova.
+    let Some(McpEvent::Ready(_comandi)) = eventi.recv().await else {
+        panic!("il primo evento deve essere Ready");
+    };
     let file = record_path(dati.path(), std::process::id());
     let letto: DiscoveryRecord = serde_json::from_slice(&std::fs::read(&file).unwrap()).unwrap();
     assert_eq!(letto.pipe, nome);
@@ -276,6 +280,13 @@ async fn tools_changed_manda_list_changed_solo_quando_cambia() {
     let mut cliente = Cliente::connetti(&server).await;
     cliente.inizializza("prova").await;
     let _ = prossimo_evento(&mut server).await;
+    // ClientConnected nasce con `initialize`: un ping sullo stesso stream
+    // garantisce che il server abbia letto anche `notifications/initialized`
+    // prima del cambio di disponibilità.
+    cliente
+        .manda(json!({"jsonrpc": "2.0", "id": 5, "method": "ping"}))
+        .await;
+    assert_eq!(cliente.ricevi().await["id"], 5);
     let git = Availability {
         git: true,
         diagnostics: false,
@@ -404,7 +415,9 @@ async fn scrittura_fuori_radice_e_sotto_git_non_domanda_all_app() {
         let result = cliente
             .chiama(id, "write_file", json!({"path":path,"content":"x"}))
             .await;
-        assert!(testo_errore(&result).contains("percorso"), "{result}");
+        // Errore del tool (`..` o `.git`), non del protocollo, e mai all'app.
+        assert_eq!(result["result"]["isError"], true, "{result}");
+        assert!(!testo_errore(&result).is_empty(), "{result}");
     }
     assert!(server.eventi.try_recv().is_err());
 }

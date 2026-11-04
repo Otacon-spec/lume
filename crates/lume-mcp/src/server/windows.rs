@@ -2,8 +2,10 @@
 //! Il comportamento resta quello precedente al trasporto Unix.
 
 use std::collections::HashMap;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
+use std::time::Duration;
 
 use tokio::net::windows::named_pipe::{NamedPipeServer, ServerOptions};
 use tokio::sync::{mpsc, watch};
@@ -26,6 +28,49 @@ fn create(name: &str, first: bool) -> std::io::Result<NamedPipeServer> {
         // `named_pipe.rs:2180-2206`); ogni `create` usa lo stesso valore.
         .max_instances(MAX_INSTANCES)
         .create(name)
+}
+
+/// Dopo la fine di una connessione Windows può liberare l'istanza della pipe
+/// in modo asincrono: la `create` immediata fallisce con PIPE_BUSY. Si riprova
+/// solo finché c'è un posto libero e manca il listener, con attesa crescente;
+/// esauriti i tentativi il server lo dichiara invece di restare muto.
+const RIPROVA_INIZIALE: Duration = Duration::from_millis(10);
+const RIPROVA_MASSIMA: Duration = Duration::from_secs(1);
+const RIPROVE: u32 = 20;
+
+struct Riprova {
+    attesa: Pin<Box<tokio::time::Sleep>>,
+    ritardo: Duration,
+    tentativi: u32,
+}
+
+impl Riprova {
+    fn prima() -> Self {
+        Self {
+            attesa: Box::pin(tokio::time::sleep(RIPROVA_INIZIALE)),
+            ritardo: RIPROVA_INIZIALE,
+            tentativi: 1,
+        }
+    }
+
+    fn successiva(self) -> Option<Self> {
+        if self.tentativi >= RIPROVE {
+            return None;
+        }
+        let ritardo = (self.ritardo * 2).min(RIPROVA_MASSIMA);
+        Some(Self {
+            attesa: Box::pin(tokio::time::sleep(ritardo)),
+            ritardo,
+            tentativi: self.tentativi + 1,
+        })
+    }
+}
+
+async fn attendi(riprova: &mut Option<Riprova>) {
+    match riprova {
+        Some(riprova) => riprova.attesa.as_mut().await,
+        None => std::future::pending().await,
+    }
 }
 
 async fn accept(listener: Option<&NamedPipeServer>) -> std::io::Result<()> {
@@ -106,6 +151,7 @@ pub(super) async fn serve(config: ServeConfig, events: mpsc::UnboundedSender<Mcp
     let mut pending: HashMap<u64, super::common::Reply> = HashMap::new();
     let mut next_conn = 0_u64;
     let mut connections: JoinSet<Option<u64>> = JoinSet::new();
+    let mut riprova: Option<Riprova> = None;
     loop {
         tokio::select! {
             // `biased`: un `Connected` già in coda passa prima del
@@ -130,6 +176,27 @@ pub(super) async fn serve(config: ServeConfig, events: mpsc::UnboundedSender<Mcp
                 }
                 if listener.is_none() {
                     listener = create(&pipe_name, false).ok();
+                    if listener.is_none() && riprova.is_none() {
+                        riprova = Some(Riprova::prima());
+                    }
+                }
+            }
+            () = attendi(&mut riprova) => {
+                let Some(corrente) = riprova.take() else { continue; };
+                if listener.is_some() || connections.len() >= MAX_INSTANCES {
+                    continue;
+                }
+                match create(&pipe_name, false) {
+                    Ok(pipe) => listener = Some(pipe),
+                    Err(error) => match corrente.successiva() {
+                        Some(prossima) => riprova = Some(prossima),
+                        None => {
+                            let _ = events.send(McpEvent::Failed(format!(
+                                "la pipe {pipe_name} non accetta nuovi client: l'istanza liberata non torna disponibile ({error})"
+                            )));
+                            return;
+                        }
+                    },
                 }
             }
             accepted = accept(listener.as_ref()) => {
@@ -147,6 +214,9 @@ pub(super) async fn serve(config: ServeConfig, events: mpsc::UnboundedSender<Mcp
                         Arc::clone(&shared),
                         availability_rx.clone(),
                     ));
+                }
+                if listener.is_none() && connections.len() < MAX_INSTANCES && riprova.is_none() {
+                    riprova = Some(Riprova::prima());
                 }
             }
         }
