@@ -90,6 +90,11 @@ impl Root {
     /// link o reparse point. La verifica TOCTOU e gli hard link restano fuori
     /// dal confine garantito.
     pub fn resolve_for_write(&self, requested: &str) -> Result<Confined, ConfineError> {
+        // Una richiesta di soli spazi è vuota su ogni sistema, prima che il
+        // controllo Windows dei componenti la legga come nome con spazi finali.
+        if requested.trim().is_empty() {
+            return Err(ConfineError::Empty);
+        }
         // Controlla i componenti originali prima della normalizzazione di
         // `candidate`: su Windows un punto/spazio finale cambia il nome letto.
         for part in Path::new(requested).components() {

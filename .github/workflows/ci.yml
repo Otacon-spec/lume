@@ -53,7 +53,7 @@ jobs:
       - name: "Test (modalità rigida: uno strumento mancante fa fallire, non saltare)"
         env:
           LUME_TEST_RICHIEDI_STRUMENTI: "1"
-        run: cargo test --workspace --locked
+        run: cargo test --workspace --locked --no-fail-fast
       - name: Test pixel del renderer vendorizzato
         run: cargo test -p iced_tiny_skia --lib --all-features --locked
       - name: Clippy del renderer vendorizzato
