@@ -14168,7 +14168,7 @@ mod reader_lifecycle_tests {
             let dir = tempfile::tempdir().unwrap();
             // MCP apre la radice canonica: la fixture fa lo stesso, così il
             // documento resta lo stesso file in entrambe le forme.
-            let base = dir.path().canonicalize().unwrap();
+            let base = lume_core::canonical_path(dir.path()).unwrap();
             let path = base.join("held-reader.txt");
             let raw = "\u{feff}λ\r\n🙂\r\n";
             std::fs::write(&path, raw).unwrap();
@@ -14460,7 +14460,7 @@ mod reader_lifecycle_tests {
         let dir = tempfile::tempdir().unwrap();
         // La radice viene canonica dal prodotto (MCP risolve la radice): la
         // fixture usa la stessa forma anche per la gate della lettura.
-        let base = dir.path().canonicalize().unwrap();
+        let base = lume_core::canonical_path(dir.path()).unwrap();
         let path = base.join("held-reader.txt");
         std::fs::write(&path, "contenuto reale λ\n").unwrap();
         let (started, release) = crate::file_read::test_read_gate::install(&path);
@@ -14636,7 +14636,7 @@ mod reader_lifecycle_tests {
         };
         let dir = tempfile::tempdir().unwrap();
         // Stessa forma canonica usata dal prodotto per la radice MCP.
-        let base = dir.path().canonicalize().unwrap();
+        let base = lume_core::canonical_path(dir.path()).unwrap();
         let path = base.join("held-reader.txt");
         std::fs::write(&path, "lettura reale\n").unwrap();
         let (started, release) = crate::file_read::test_read_gate::install(&path);
