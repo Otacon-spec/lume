@@ -20,6 +20,8 @@ jobs:
 
   piattaforme:
     uses: ./.github/workflows/piattaforme.yml
+    with:
+      macos: false
     permissions:
       contents: read
 
@@ -72,12 +74,6 @@ jobs:
         with:
           name: lume-linux-x86_64
           path: artifacts
-      - name: Scarica i pacchetti macOS verificati
-        uses: actions/download-artifact@v4
-        with:
-          pattern: lume-macos-*
-          path: artifacts
-          merge-multiple: true
       - name: Verifica manifest e commit di tutti gli artefatti
         shell: pwsh
         run: |
@@ -87,8 +83,9 @@ jobs:
           }
           $artefatti = @(Get-ChildItem -Path artifacts -File |
             Where-Object { $_.Name -match '\.(zip|tar\.gz)$' })
-          if ($artefatti.Count -lt 4) {
-            throw "attesi almeno 4 artefatti, trovati $($artefatti.Count)"
+          # Windows e Linux: macOS non è nella release 0.4.0.
+          if ($artefatti.Count -lt 2) {
+            throw "attesi almeno 2 artefatti, trovati $($artefatti.Count)"
           }
           foreach ($artefatto in $artefatti) {
             python tools/verifica_manifest_artefatto.py $artefatto.FullName $commit
@@ -101,8 +98,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $assets = @(Get-ChildItem -Path artifacts -File | ForEach-Object { $_.FullName })
-          if ($assets.Count -lt 12) { throw "attesi almeno 12 file (archivio, checksum, manifest per piattaforma), trovati $($assets.Count)" }
+          if ($assets.Count -lt 6) { throw "attesi almeno 6 file (archivio, checksum, manifest per piattaforma), trovati $($assets.Count)" }
           gh release create $env:GITHUB_REF_NAME `
             @assets `
             --title "Lume $env:GITHUB_REF_NAME (alfa)" `
-            --notes "Versione alfa per Windows x64, Linux x86_64, macOS Apple Silicon e macOS Intel. I pacchetti Windows e macOS non sono firmati né notarizzati. Le novità sono in CHANGELOG.md; vedi README per i limiti di piattaforma."
+            --notes "Versione alfa per Windows x64 e Linux x86_64. Il pacchetto Windows non è firmato. macOS non è in questa versione: arriverà con una release successiva. Le novità sono in CHANGELOG.md; vedi README e le note di rilascio per i limiti noti."

@@ -9,9 +9,11 @@ in alpha e qualificata su Linux.
 
 Nessuna modifica dopo la 0.4.0.
 
-## [0.4.0] — 2026-11-03
+## [0.4.0] — 2026-11-05
 
-Prima release pubblica: **alpha** qualificata su Linux x86_64. Raccoglie le
+Prima release pubblica: **alpha** qualificata su Linux x86_64, con pacchetto
+anche per Windows x64 (test in CI, uso reale non collaudato); macOS non è in
+questa release. Raccoglie le
 voci della 0.3.0 del 2026-09-30, che non ha avuto una release pubblica, e
 quelle elencate qui sotto. I limiti della qualifica sono in «Limiti noti di
 questa alpha» nel README e nelle
@@ -83,6 +85,19 @@ questa alpha» nel README e nelle
   tetto di 32 MiB.
 
 ### Corretto
+
+- Windows: percorsi confrontati nella stessa forma (`D:\...` e non la forma
+  verbatim `\\?\D:\...`): «Sostituisci nei file» scrive di nuovo i file
+  chiusi, le note del progetto sono riconosciute e un file aperto da Esplora
+  risorse non cambia più la cartella del progetto.
+- Percorsi sotto una cartella antenata che è un link simbolico: sostituzione
+  nei file, note, confine MCP, Cestino e watcher confrontano forme canoniche.
+- Windows: il ridisegno parziale dei numeri di riga non lascia più pixel
+  vecchi durante lo scorrimento.
+- MCP su Windows: la pipe accetta di nuovo client dopo la chiusura di uno di
+  loro; se non può, lo dichiara invece di restare muta.
+- macOS: i comandi `git` riusciti non risultano più falliti (preparazione
+  per una release macOS successiva).
 - Caricamento degli Appunti: preferenze e scansioni superate vengono
   scartate prima degli effetti, risultati ed errori sono autenticati, e il
   cambio cartella annulla il «Nuovo appunto» pendente con un avviso.

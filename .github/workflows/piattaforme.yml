@@ -2,6 +2,11 @@ name: Piattaforme
 
 on:
   workflow_call:
+    inputs:
+      macos:
+        description: "Esegue anche i job macOS (la release 0.4.0 li esclude)"
+        type: boolean
+        default: true
   push:
     branches: [main]
   pull_request:
@@ -134,6 +139,9 @@ jobs:
 
   macos:
     name: macOS (${{ matrix.arch }})
+    # Fuori dalla release 0.4.0 (macOS non qualificato): la CI lo prova
+    # comunque su push, PR e avvio manuale.
+    if: ${{ inputs.macos != false }}
     strategy:
       fail-fast: false
       matrix:

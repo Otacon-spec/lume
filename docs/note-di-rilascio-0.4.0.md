@@ -65,10 +65,14 @@ libdbus compilata dal sorgente (su Ubuntu `build-essential`).
 
 ### Piattaforme
 
-- **Windows e macOS non sono qualificati in questa release.** Windows è stato
-  collaudato su un binario del 23 ottobre: chooser dei file, ACL, Cestino,
-  `rename`, SMB, WSL e perdita di alimentazione non sono provati sul codice
-  di questa release. macOS non è mai stato eseguito.
+- **Pacchetti: Linux x86_64 e Windows x64.** Su Windows l'intera suite di
+  test passa nella CI pubblica, ma l'uso reale non è collaudato sul codice di
+  questa release: chooser dei file, ACL, Cestino, `rename`, SMB, WSL e
+  perdita di alimentazione sono stati provati solo su un binario del 23
+  ottobre. Il pacchetto Windows non è firmato.
+- **macOS non è in questa release.** La prima esecuzione in CI ha trovato,
+  fra l'altro, che i language server non partono; il lavoro continua per una
+  versione successiva.
 - **Installazione su un host pulito** non è stata provata.
 
 ### Salvataggio

@@ -121,8 +121,8 @@ Si può sempre costruire dai sorgenti (vedi «Compilare»):
   `artifacts/`, con le licenze richieste; `bash
   tools/verifica_pacchetto_unix.sh <archivio>` ne controlla contenuto e
   watchdog.
-- **macOS:** lo stesso script di Linux, ma questa release non ha un artefatto
-  macOS qualificato.
+- **macOS:** lo stesso script di Linux, ma la 0.4.0 non ha un pacchetto
+  macOS: arriverà con una versione successiva.
 
 ### Limiti noti di questa alpha
 
@@ -133,11 +133,11 @@ Quello che segue non è verificato e non va considerato garantito; le stesse
 voci, con più contesto, sono nelle
 [note di rilascio](docs/note-di-rilascio-0.4.0.md).
 
-- **Piattaforme.** Windows e macOS non sono qualificati in questa release:
-  Windows è stato collaudato su un binario del 23 ottobre (chooser, ACL,
-  Cestino, `rename`, SMB, WSL e perdita di alimentazione non sono provati sul
-  codice distribuito) e macOS non è mai stato eseguito. L'installazione su un
-  host pulito non è stata provata.
+- **Piattaforme.** I pacchetti sono per Linux x86_64 e Windows x64. Su
+  Windows i test passano nella CI pubblica, ma l'uso reale (chooser, ACL,
+  Cestino, `rename`, SMB, WSL e perdita di alimentazione) è stato collaudato
+  solo su un binario del 23 ottobre. macOS non è in questa release.
+  L'installazione su un host pulito non è stata provata.
 - **Salvataggio.** Su Linux il replace atomico non conserva le ACL POSIX
   nominate né gli attributi estesi e non è garantito contro una perdita di
   alimentazione o contro uno scrittore esterno che cambi il file fra il
