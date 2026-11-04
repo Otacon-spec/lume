@@ -1,0 +1,29 @@
+name: Debug MCP pipe (temporaneo)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pipe:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.96.0 --profile minimal
+          rustup default 1.96.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Build dei test pipe
+        run: cargo test -p lume-mcp --test pipe --locked --no-run
+      - name: Pipe in parallelo
+        continue-on-error: true
+        env:
+          RUST_BACKTRACE: "1"
+        run: cargo test -p lume-mcp --test pipe --locked -- --nocapture
+      - name: Pipe in serie
+        continue-on-error: true
+        env:
+          RUST_BACKTRACE: "1"
+        run: cargo test -p lume-mcp --test pipe --locked -- --nocapture --test-threads=1
