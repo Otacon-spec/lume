@@ -32,6 +32,16 @@ jobs:
         run: |
           git config --global user.name "lume-ci"
           git config --global user.email "lume-ci@users.noreply.github.com"
+      - name: Ambiente dei test come su Linux
+        # Il runner ha core.autocrlf=true di sistema: i checkout dei repository
+        # di prova diventerebbero CRLF e i test confrontano byte LF. La TEMP
+        # predefinita è un nome corto 8.3 (RUNNER~1) che non coincide con il
+        # percorso canonico usato da Lume per i confini del progetto.
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
+          "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
       - run: cargo fmt --all --check
       - name: Ogni unsafe ha il suo SAFETY
         shell: bash
