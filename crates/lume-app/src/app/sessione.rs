@@ -622,7 +622,7 @@ impl Lume {
     /// progetto: albero, Git e terminale restano cosi' coerenti col file che
     /// l'utente ha scelto in Esplora file.
     pub(super) fn open_startup_file(&mut self, path: &Path) -> Task<Message> {
-        let path = match path.canonicalize() {
+        let path = match lume_core::canonical_path(path) {
             Ok(path) => path,
             Err(error) => {
                 return self

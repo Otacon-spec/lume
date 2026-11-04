@@ -115,11 +115,14 @@ release_artifact_basename() {
 
 # Triple del target compilato: la host di rustc (build native), non l'etichetta.
 release_target_triple() {
-    local triple
-    if ! triple="$(rustc -vV 2>/dev/null | awk '/^host: /{print $2; exit}')"; then
+    local versione triple
+    # Prima tutto l'output, poi il filtro: con pipefail, un awk che esce alla
+    # prima riga utile fa morire rustc di SIGPIPE e la pipeline fallisce a caso.
+    if ! versione="$(rustc -vV 2>/dev/null)"; then
         release_errore "impossibile leggere la triple da rustc -vV"
         return 1
     fi
+    triple="$(printf '%s\n' "$versione" | awk '/^host: /{print $2}')"
     if [ -z "$triple" ]; then
         release_errore "rustc -vV non riporta la triple host"
         return 1

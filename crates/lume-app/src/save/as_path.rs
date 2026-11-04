@@ -66,7 +66,7 @@ pub(super) fn publish_authorized(
 mod publish_tests;
 
 fn resolved(path: &Path) -> io::Result<PathBuf> {
-    match fs::canonicalize(path) {
+    match lume_core::canonical_path(path) {
         Ok(path) => Ok(path),
         Err(e) if e.kind() == io::ErrorKind::NotFound => {
             // Non seguire un symlink pendente facendolo diventare nuovo file.
@@ -89,7 +89,7 @@ fn resolved(path: &Path) -> io::Result<PathBuf> {
                     "il percorso non ha un nome file",
                 )
             })?;
-            Ok(fs::canonicalize(parent)?.join(name))
+            Ok(lume_core::canonical_path(parent)?.join(name))
         }
         Err(e) => Err(e),
     }

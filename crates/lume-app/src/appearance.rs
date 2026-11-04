@@ -211,7 +211,7 @@ impl IconThemeState {
         if !root.is_dir() {
             return None;
         }
-        match root.canonicalize() {
+        match lume_core::canonical_path(&root) {
             Ok(canonical) => Some((root, canonical)),
             Err(error) => {
                 self.mark_unavailable(
@@ -237,7 +237,7 @@ impl IconThemeState {
         if self.registry.provider(&id).is_some() {
             return;
         }
-        let canonical_pack = match path.canonicalize() {
+        let canonical_pack = match lume_core::canonical_path(&path) {
             Ok(path) if path.starts_with(canonical_root) => path,
             Ok(path) => {
                 let error = format!("pack path escapes icon-themes root: {}", path.display());

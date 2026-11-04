@@ -221,7 +221,7 @@ fn prepare_sync(
                 ..Report::default()
             }));
         }
-        if let Ok(canonical) = std::fs::canonicalize(&path) {
+        if let Ok(canonical) = lume_core::canonical_path(&path) {
             aliases.insert(canonical, path);
         }
     }
@@ -252,7 +252,7 @@ fn prepare_sync(
                     changes,
                 });
             } else {
-                let canonical = std::fs::canonicalize(&file.path)
+                let canonical = lume_core::canonical_path(&file.path)
                     .map_err(|e| format!("Lettura di {} fallita: {e}", file.path.display()))?;
                 if !resolved.insert(canonical.clone()) {
                     return Err(format!("Target fisico duplicato: {}", file.path.display()));
@@ -304,7 +304,8 @@ fn prepare_sync(
     Ok(plan)
 }
 fn unchanged(file: &Closed) -> Result<(), String> {
-    if std::fs::canonicalize(&file.path).map_err(|e| e.to_string())? != file.write.destination() {
+    if lume_core::canonical_path(&file.path).map_err(|e| e.to_string())? != file.write.destination()
+    {
         return Err("percorso o collegamento cambiato dopo la preparazione".into());
     }
     let bytes = crate::file_read::read_bytes_capped(&file.path, crate::file_read::MAX_FILE_BYTES)

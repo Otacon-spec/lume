@@ -10,6 +10,7 @@ repository.workspace = true
 homepage.workspace = true
 
 [dependencies]
+dunce = { workspace = true }
 ropey = { workspace = true }
 notify = { workspace = true }
 ignore = { workspace = true }

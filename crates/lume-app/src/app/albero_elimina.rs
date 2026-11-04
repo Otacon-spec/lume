@@ -52,9 +52,9 @@ pub fn dentro_progetto(radice: &Path, percorso: &Path) -> Result<(), String> {
     {
         return Err(fuori());
     }
-    let radice_canonica = radice.canonicalize().map_err(|_| fuori())?;
+    let radice_canonica = lume_core::canonical_path(radice).map_err(|_| fuori())?;
     let cartella = percorso.parent().ok_or_else(fuori)?;
-    let cartella_canonica = cartella.canonicalize().map_err(|_| fuori())?;
+    let cartella_canonica = lume_core::canonical_path(cartella).map_err(|_| fuori())?;
     if !cartella_canonica.starts_with(&radice_canonica) {
         return Err(fuori());
     }
@@ -80,7 +80,7 @@ fn verifica_tipo(percorso: &Path, cartella: bool) -> Result<(), String> {
 /// antenati esistenti conservano il legame degli alias con la cartella.
 fn risolvi_antenati(percorso: &Path) -> Option<PathBuf> {
     for antenato in percorso.ancestors() {
-        if let Ok(mut canonico) = antenato.canonicalize() {
+        if let Ok(mut canonico) = lume_core::canonical_path(antenato) {
             canonico.push(percorso.strip_prefix(antenato).ok()?);
             return Some(canonico);
         }

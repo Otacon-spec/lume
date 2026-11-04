@@ -484,7 +484,7 @@ fn prepare_atomic_with_policy(
                 "il nome già risolto è diventato un link: nessuna preparazione",
             ));
         }
-        Ok(metadata) if metadata.file_type().is_symlink() => fs::canonicalize(path)?,
+        Ok(metadata) if metadata.file_type().is_symlink() => crate::canonical_path(path)?,
         // Il commit può arrivare da un altro task, dopo un cambio di cwd.
         Ok(_) => std::path::absolute(path)?,
         Err(error) if error.kind() == io::ErrorKind::NotFound => std::path::absolute(path)?,

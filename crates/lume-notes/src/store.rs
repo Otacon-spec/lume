@@ -73,7 +73,7 @@ pub struct NoteStore {
 impl NoteStore {
     pub fn open(root: impl AsRef<Path>) -> Result<Self, NoteError> {
         fs::create_dir_all(root.as_ref()).map_err(io_error)?;
-        let root = fs::canonicalize(root.as_ref()).map_err(io_error)?;
+        let root = lume_core::canonical_path(root.as_ref()).map_err(io_error)?;
         Ok(Self { root })
     }
 
@@ -422,7 +422,7 @@ impl NoteStore {
         if metadata.file_type().is_symlink() || !metadata.is_file() || !is_markdown(&absolute) {
             return Err(NoteError::PathOutsideRoot { path: absolute });
         }
-        let canonical = fs::canonicalize(&absolute).map_err(io_error)?;
+        let canonical = lume_core::canonical_path(&absolute).map_err(io_error)?;
         if canonical.parent() != Some(self.root.as_path()) {
             return Err(NoteError::PathOutsideRoot { path: absolute });
         }

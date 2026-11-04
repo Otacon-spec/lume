@@ -3812,6 +3812,7 @@ dependencies = [
 name = "lume-core"
 version = "0.4.0"
 dependencies = [
+ "dunce",
  "grep-matcher",
  "grep-regex",
  "grep-searcher",

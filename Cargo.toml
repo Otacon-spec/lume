@@ -16,6 +16,8 @@ repository = "https://github.com/Otacon-spec/lume"
 homepage = "https://github.com/Otacon-spec/lume"
 
 [workspace.dependencies]
+# Percorsi canonici senza il prefisso verbatim \\?\ di Windows quando non serve.
+dunce = "1.0"
 # `default-features = false`, con i default di iced elencati sotto tranne
 # `linux-theme-detection`: quel default accende
 # `iced_winit/linux-theme-detection` → `mundy` → `zbus 5`, e zbus 5 è

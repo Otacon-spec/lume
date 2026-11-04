@@ -98,9 +98,9 @@ impl Lume {
                 if let Some(note_result) = note_result {
                     let (notes_dir, store, loaded) = note_result?;
                     let note_matches_selection = notes_selection.as_ref().is_none_or(|scelta| {
-                        std::fs::canonicalize(&notes_dir)
+                        lume_core::canonical_path(&notes_dir)
                             .ok()
-                            .zip(std::fs::canonicalize(scelta).ok())
+                            .zip(lume_core::canonical_path(scelta).ok())
                             .is_some_and(|(origine, selezione)| origine == selezione)
                     });
                     let text = crate::file_read::Testo::from_note(

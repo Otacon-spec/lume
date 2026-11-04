@@ -53,7 +53,7 @@ impl Lume {
             async move {
                 tokio::task::spawn_blocking(move || {
                     let report = crate::idea_import::load(&path).map_err(str::to_owned)?;
-                    let source = path.canonicalize().unwrap_or(path);
+                    let source = lume_core::canonical_path(&path).unwrap_or(path);
                     Ok((source, report))
                 })
                 .await

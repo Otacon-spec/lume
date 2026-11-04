@@ -1566,9 +1566,9 @@ pub(crate) fn carica_nota_ripristinata(
     }
     let parent = path.parent()?;
     let in_notes_dir = parent == notes_dir
-        || std::fs::canonicalize(parent)
+        || lume_core::canonical_path(parent)
             .ok()
-            .zip(std::fs::canonicalize(notes_dir).ok())
+            .zip(lume_core::canonical_path(notes_dir).ok())
             .is_some_and(|(a, b)| a == b);
     if !in_notes_dir {
         return None;

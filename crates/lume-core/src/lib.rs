@@ -4,6 +4,7 @@
 //! ropey); i byte compaiono solo in [`AppliedEdit`], pensato per consumer
 //! incrementali come tree-sitter.
 
+pub mod canonical;
 pub mod document;
 pub mod error;
 pub mod file_write;
@@ -20,6 +21,7 @@ pub mod trash;
 pub mod watcher;
 pub mod workspace;
 
+pub use canonical::canonical_path;
 pub use document::{AppliedEdit, DocId, Document, PreparedReload, PreparedText, SaveSnapshot};
 pub use error::CoreError;
 pub use fs_tree::{FsNode, FsTree, RowSpec};

@@ -715,7 +715,7 @@ async fn notes_delete_prepare_blocking(
     opened: Vec<NoteDeleteDocument>,
 ) -> Result<NoteDeletePrepared, String> {
     tokio::task::spawn_blocking(move || {
-        let target = path.canonicalize().map_err(|e| e.to_string())?;
+        let target = lume_core::canonical_path(&path).map_err(|e| e.to_string())?;
         let identity = store.load(&path).map_err(|e| e.to_string())?.identity;
         let file_key = crate::save::identity(&target)
             .map_err(|error| error.to_string())?
@@ -740,7 +740,7 @@ async fn notes_delete_blocking(
     delete: fn(&NoteStore, &Path) -> Result<DeleteDisposition, String>,
 ) -> Result<DeleteDisposition, String> {
     tokio::task::spawn_blocking(move || {
-        let target = path.canonicalize().map_err(|e| e.to_string())?;
+        let target = lume_core::canonical_path(&path).map_err(|e| e.to_string())?;
         let identity = store.load(&path).map_err(|e| e.to_string())?.identity;
         let file_key = crate::save::identity(&target).map_err(|e| e.to_string())?;
         if target != prepared.target
