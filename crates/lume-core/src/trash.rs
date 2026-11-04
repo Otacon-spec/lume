@@ -9,8 +9,12 @@
 //! Le directory si spostano con una rinomina nativa senza sovrascritture.
 //! Non si attraversano i link e non si copia o cancella ricorsivamente.
 
+#[cfg(not(windows))]
 use std::ffi::OsString;
-use std::fs::{self, OpenOptions};
+use std::fs;
+#[cfg(not(windows))]
+use std::fs::OpenOptions;
+#[cfg(not(windows))]
 use std::io::{ErrorKind, Write};
 use std::path::{Path, PathBuf};
 

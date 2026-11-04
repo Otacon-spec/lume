@@ -11,7 +11,7 @@ use comune::{
     prossimo_evento, testo_errore, tutto_acceso,
 };
 use lume_mcp::discovery::{DiscoveryRecord, preamble, record_path};
-use lume_mcp::server::serve;
+use lume_mcp::server::{Endpoint, serve};
 use lume_mcp::{AppAnswer, AppQuery, Availability, McpCommand, McpEvent, TextSnapshot, Token};
 use serde_json::json;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
@@ -108,7 +108,8 @@ async fn il_file_di_scoperta_vive_finche_vive_il_server() {
     let nome = nome_unico();
     let token = Token::generate().unwrap();
     let mut config = configurazione(&nome, &token, radice.path(), Availability::default());
-    config.discovery_dir = Some(dati.path().to_path_buf());
+    let Endpoint::Pipe { discovery_dir, .. } = &mut config.endpoint;
+    *discovery_dir = Some(dati.path().to_path_buf());
     let (tx, mut eventi) = tokio::sync::mpsc::unbounded_channel();
     let compito = tokio::spawn(serve(config, tx));
     assert!(matches!(eventi.recv().await, Some(McpEvent::Ready(_))));

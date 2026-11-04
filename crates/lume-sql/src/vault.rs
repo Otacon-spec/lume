@@ -221,9 +221,24 @@ mod tests {
             "una chiave mai scritta non deve esistere"
         );
 
-        vault
-            .set(&key, &Secret::new("p4ssw0rd".into()))
-            .expect("scrittura");
+        // Un Secret Service raggiungibile ma senza collezione predefinita
+        // (runner CI senza keyring sbloccato) risponde alla lettura e rifiuta
+        // la scrittura: stessa regola dell'assenza.
+        match vault.set(&key, &Secret::new("p4ssw0rd".into())) {
+            Ok(()) => {}
+            Err(VaultError::Unavailable(motivo)) => {
+                assert_ne!(
+                    std::env::var_os("LUME_REQUIRE_SYSTEM_VAULT").as_deref(),
+                    Some(std::ffi::OsStr::new("1")),
+                    "cassaforte di sistema richiesta ma non scrivibile: {motivo}"
+                );
+                eprintln!(
+                    "cassaforte di sistema non scrivibile: prova d'integrazione non eseguita"
+                );
+                return;
+            }
+            Err(errore) => panic!("scrittura: {errore:?}"),
+        }
         assert_eq!(
             vault
                 .get(&key)

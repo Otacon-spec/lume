@@ -320,7 +320,9 @@ fn closed_before_reply() -> std::io::Error {
 }
 
 /// «Occupato» e «chiuso prima di rispondere» sono servizio non disponibile;
-/// ogni altro errore del trasporto resta un errore di I/O.
+/// ogni altro errore del trasporto resta un errore di I/O. Solo il ponte
+/// Unix conosce il segnale di tetto.
+#[cfg(unix)]
 fn bridge_is_unavailable(error: &std::io::Error) -> bool {
     matches!(
         error.kind(),
@@ -532,6 +534,7 @@ mod tests {
 
     /// «Occupato» e «chiuso prima di rispondere» sono servizio non
     /// disponibile; un errore di trasporto a metà sessione no.
+    #[cfg(unix)]
     #[test]
     fn solo_il_tetto_e_la_chiusura_iniziale_sono_servizio_non_disponibile() {
         assert!(bridge_is_unavailable(&busy_error()));

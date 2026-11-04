@@ -475,6 +475,8 @@ mod tests {
         assert!(dentro.is_ok());
     }
 
+    // Su Windows un symlink richiede privilegi: la prova resta Unix.
+    #[cfg(unix)]
     #[test]
     fn una_cartella_symlink_che_esce_dal_progetto_non_e_ammessa() {
         let radice = tempfile::tempdir().unwrap();
