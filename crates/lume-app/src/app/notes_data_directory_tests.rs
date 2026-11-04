@@ -66,7 +66,10 @@ fn figlio_crea_nota_nella_radice_isolata() {
     assert_eq!(note, radice.join("notes"));
     let store = lume_notes::NoteStore::open(&note).unwrap();
     let caricata = store.create("Nota isolata").unwrap();
-    assert!(caricata.path().starts_with(&note));
+    // Lo store canonicalizza la radice (un antenato symlink cambia la forma):
+    // l'ipotesi «stesso prefisso scritto» è della fixture, non del prodotto.
+    let note_canonica = std::fs::canonicalize(&note).unwrap();
+    assert!(caricata.path().starts_with(&note_canonica));
     assert_eq!(
         store.load(caricata.path()).unwrap().note.header.title,
         "Nota isolata"

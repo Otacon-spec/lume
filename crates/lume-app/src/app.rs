@@ -7331,7 +7331,14 @@ mod appunti_scarico_tests {
             info.lines()
                 .any(|riga| riga == format!("Path={}", note.path().display()))
         );
-        assert!(store.scan().unwrap().iter().any(|nota| nota.path == alias));
+        let alias_canonico = std::fs::canonicalize(&alias).unwrap();
+        assert!(
+            store
+                .scan()
+                .unwrap()
+                .iter()
+                .any(|nota| nota.path == alias_canonico)
+        );
         let _ = app.update(Message::NotesAutosaveDue(nota_doc, 0));
         assert!(!note.path().exists());
     }
@@ -10146,7 +10153,10 @@ mod appunti_scarico_tests {
         assert_eq!(notes.open_saves.len(), 1);
         let note = store.scan().unwrap();
         assert_eq!(note.len(), 1);
-        assert!(note[0].path.starts_with(cartella.path()));
+        // Lo store conserva la radice canonica: il confronto usa la stessa
+        // forma, non il percorso della TMPDIR eventualmente dietro un link.
+        let cartella_canonica = std::fs::canonicalize(cartella.path()).unwrap();
+        assert!(note[0].path.starts_with(&cartella_canonica));
 
         let task = app.update(Message::NotesScanned(
             vecchia,
@@ -11197,7 +11207,10 @@ mod appunti_scarico_tests {
                 std::env::temp_dir().join(format!("lume_mcp_app_{nome}_{}", std::process::id()));
             let _ = std::fs::remove_dir_all(&path);
             std::fs::create_dir_all(&path).unwrap();
-            path
+            // Il server MCP usa la radice canonica: la fixture fa lo stesso,
+            // altrimenti un antenato symlink (TMPDIR su macOS) crea due forme
+            // dello stesso progetto e i confronti dell'app non le uniscono.
+            std::fs::canonicalize(&path).unwrap()
         }
 
         /// Crack privata 0700 sotto `$HOME`: la scoperta Unix rifiuta
@@ -11902,6 +11915,21 @@ mod appunti_scarico_tests {
                         }
                     }
                     panic!("il Task non ha prodotto un messaggio")
+                })
+        }
+
+        /// Un comando LSP atteso dalla fixture: la scadenza impedisce che un
+        /// instradamento rotto faccia restare la suite appesa per sempre.
+        fn comando_lsp(ricevitore: &mut lume_lsp::LspCommandReceiver) -> lume_lsp::LspCommand {
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(async {
+                    tokio::time::timeout(std::time::Duration::from_secs(5), ricevitore.recv())
+                        .await
+                        .expect("comando LSP entro la scadenza")
+                        .expect("mailbox LSP chiusa")
                 })
         }
 
@@ -12730,13 +12758,7 @@ mod appunti_scarico_tests {
             lsp.mailbox = Some(mailbox_lsp);
             lsp.availability.definition = true;
             app.open_file(&root.join("main.rs")).unwrap();
-            let lume_lsp::LspCommand::Open { .. } = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .unwrap()
-                .block_on(ricevitore_lsp.recv())
-                .unwrap()
-            else {
+            let lume_lsp::LspCommand::Open { .. } = comando_lsp(&mut ricevitore_lsp) else {
                 panic!("atteso didOpen")
             };
 
@@ -12755,14 +12777,7 @@ mod appunti_scarico_tests {
                     query,
                 },
             ));
-            let lume_lsp::LspCommand::Ask { id, request } =
-                tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .unwrap()
-                    .block_on(ricevitore_lsp.recv())
-                    .unwrap()
-            else {
+            let lume_lsp::LspCommand::Ask { id, request } = comando_lsp(&mut ricevitore_lsp) else {
                 panic!("atteso textDocument/definition")
             };
             assert!(matches!(request, lume_lsp::LspRequest::Definition { .. }));
@@ -14151,7 +14166,10 @@ mod reader_lifecycle_tests {
                 continue;
             }
             let dir = tempfile::tempdir().unwrap();
-            let path = dir.path().join("held-reader.txt");
+            // MCP apre la radice canonica: la fixture fa lo stesso, così il
+            // documento resta lo stesso file in entrambe le forme.
+            let base = dir.path().canonicalize().unwrap();
+            let path = base.join("held-reader.txt");
             let raw = "\u{feff}λ\r\n🙂\r\n";
             std::fs::write(&path, raw).unwrap();
             let (mut app, _) = Lume::new_without_store();
@@ -14440,7 +14458,10 @@ mod reader_lifecycle_tests {
     fn held_read_collects_with_gate_runtime_loss(kind: u8, lose_gate_runtime: bool) {
         use futures::FutureExt;
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("held-reader.txt");
+        // La radice viene canonica dal prodotto (MCP risolve la radice): la
+        // fixture usa la stessa forma anche per la gate della lettura.
+        let base = dir.path().canonicalize().unwrap();
+        let path = base.join("held-reader.txt");
         std::fs::write(&path, "contenuto reale λ\n").unwrap();
         let (started, release) = crate::file_read::test_read_gate::install(&path);
         let (mut app, _) = Lume::new_without_store();
@@ -14614,7 +14635,9 @@ mod reader_lifecycle_tests {
             atomic::{AtomicBool, Ordering},
         };
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("held-reader.txt");
+        // Stessa forma canonica usata dal prodotto per la radice MCP.
+        let base = dir.path().canonicalize().unwrap();
+        let path = base.join("held-reader.txt");
         std::fs::write(&path, "lettura reale\n").unwrap();
         let (started, release) = crate::file_read::test_read_gate::install(&path);
         let (mut app, _) = Lume::new_without_store();

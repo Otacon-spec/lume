@@ -107,6 +107,27 @@ fn consenso_reale_concede_o_nega_senza_plan_nella_ui() {
     });
 }
 
+#[cfg(unix)]
+#[test]
+fn la_sostituzione_scrive_anche_con_un_antenato_symlink() {
+    runtime().block_on(async {
+        let reale = tempfile::tempdir().unwrap();
+        let file = source(reale.path(), "file.txt");
+        let padre_link = tempfile::tempdir().unwrap();
+        let link = padre_link.path().join("alias");
+        std::os::unix::fs::symlink(reale.path(), &link).unwrap();
+        let via_link = link.join("file.txt");
+        let job = job(11, std::slice::from_ref(&via_link));
+        let mut stream = job.delivery();
+        let token = ready(&mut stream).await;
+        assert!(token.grant());
+        let receipt = done(&mut stream).await;
+        assert!(receipt.take().unwrap().report.ok());
+        assert_eq!(std::fs::read(&file).unwrap(), b"AGO\n");
+        assert_eq!(std::fs::read(&via_link).unwrap(), b"AGO\n");
+    });
+}
+
 #[test]
 fn collector_freddo_non_ammette_e_drop_delivery_notifica_done() {
     runtime().block_on(async {

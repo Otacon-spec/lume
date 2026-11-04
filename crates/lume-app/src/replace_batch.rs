@@ -58,6 +58,9 @@ pub struct OpenChange {
 }
 struct Closed {
     path: PathBuf,
+    /// Forma canonica alla preparazione: al commit il file deve risolversi
+    /// ancora qui, o un antenato è stato sostituito (anche da un link).
+    canonical: PathBuf,
     digest: [u8; 32],
     write: lume_core::file_write::PreparedWrite,
 }
@@ -280,6 +283,7 @@ fn prepare_sync(
                     .map_err(|e| format!("Preparazione di {} fallita: {e}", file.path.display()))?;
                 plan.closed.push(Closed {
                     path: file.path,
+                    canonical,
                     digest,
                     write,
                 });
@@ -304,9 +308,16 @@ fn prepare_sync(
     Ok(plan)
 }
 fn unchanged(file: &Closed) -> Result<(), String> {
-    if lume_core::canonical_path(&file.path).map_err(|e| e.to_string())? != file.write.destination()
-    {
-        return Err("percorso o collegamento cambiato dopo la preparazione".into());
+    // Il confronto è con la forma canonica fissata alla preparazione, non
+    // con una ricanonicalizzazione di `destination`: risolvere entrambe
+    // adesso seguirebbe gli stessi link attuali e non vedrebbe un antenato
+    // sostituito da un symlink verso fuori fra prepare e commit.
+    let cambiato = || "percorso o collegamento cambiato dopo la preparazione".to_owned();
+    let attuale = lume_core::canonical_path(&file.path).map_err(|_| cambiato())?;
+    let destinazione =
+        lume_core::canonical_path(file.write.destination()).map_err(|_| cambiato())?;
+    if attuale != file.canonical || destinazione != file.canonical {
+        return Err(cambiato());
     }
     let bytes = crate::file_read::read_bytes_capped(&file.path, crate::file_read::MAX_FILE_BYTES)
         .map_err(|e| e.to_string())?;
@@ -574,6 +585,41 @@ mod tests {
             assert_eq!(std::fs::read(first).unwrap(), b"ago\n");
             assert_eq!(std::fs::read(second).unwrap(), b"esterno\n");
             assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 2);
+        });
+    }
+
+    /// Fra prepare e commit una cartella antenata viene sostituita da un
+    /// link verso fuori, dove c'è un file con gli stessi byte: il commit non
+    /// deve seguire il link (la forma canonica fissata alla preparazione).
+    #[cfg(unix)]
+    #[test]
+    fn antenato_sostituito_da_un_link_dopo_prepare_non_pubblica_fuori() {
+        let dir = tempfile::tempdir().unwrap();
+        let fuori = tempfile::tempdir().unwrap();
+        let sub = dir.path().join("sub");
+        std::fs::create_dir(&sub).unwrap();
+        let path = source(&sub, "file.txt");
+        let esterno = source(fuori.path(), "file.txt");
+        runtime().block_on(async {
+            let c = Arc::new(AtomicBool::new(false));
+            let p = prepare(
+                vec![found(path.clone())],
+                "AGO".into(),
+                vec![],
+                vec![],
+                c.clone(),
+            )
+            .await
+            .unwrap();
+            std::fs::rename(&sub, dir.path().join("sub-originale")).unwrap();
+            std::os::unix::fs::symlink(fuori.path(), &sub).unwrap();
+            let o = commit(p, c).await.take().unwrap();
+            assert!(o.report.committed.is_empty(), "{:?}", o.report);
+            assert_eq!(std::fs::read(&esterno).unwrap(), b"ago\n");
+            assert_eq!(
+                std::fs::read(dir.path().join("sub-originale/file.txt")).unwrap(),
+                b"ago\n"
+            );
         });
     }
 

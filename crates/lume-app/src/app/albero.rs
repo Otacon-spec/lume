@@ -88,7 +88,7 @@ pub fn nome_valido(nome: &str) -> Result<(), String> {
 pub fn crea(radice: &Path, cartella: &Path, azione: Azione, nome: &str) -> Result<PathBuf, String> {
     nome_valido(nome)?;
     let nome = nome.trim();
-    if !cartella.starts_with(radice) {
+    if !lume_core::path_is_within(radice, cartella) {
         return Err("la cartella non è dentro il progetto".to_owned());
     }
     let percorso = cartella.join(nome);
@@ -132,7 +132,7 @@ impl super::Lume {
         let Some(radice) = self.project_root.clone() else {
             return self.notify_error("Nessun progetto aperto: non c'è dove creare".to_owned());
         };
-        if !cartella.starts_with(&radice) {
+        if !lume_core::path_is_within(&radice, &cartella) {
             return self.notify_error("La cartella non è dentro il progetto".to_owned());
         }
         self.albero = Some(Richiesta {

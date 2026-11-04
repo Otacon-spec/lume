@@ -40,10 +40,21 @@ pub struct Richiesta {
 ///
 /// Il confronto è canonico: una sottocartella symlink che punta fuori dal
 /// progetto porta a un file che **non** è del progetto, anche se il suo
-/// percorso scritto lo sembra.
+/// percorso scritto lo sembra. Anche il percorso può avere un antenato
+/// symlink (su macOS `/var` è un link a `/private/var`): il prefisso scritto
+/// non basta, quindi si confrontano le due forme canoniche.
 pub fn dentro_progetto(radice: &Path, percorso: &Path) -> Result<(), String> {
     let fuori = || "il file non è dentro il progetto".to_owned();
-    if percorso == radice || !percorso.starts_with(radice) {
+    if !percorso.is_absolute() || percorso == radice {
+        return Err(fuori());
+    }
+    // Anche una forma alias della radice (es. /var/… per /private/var/…) è
+    // la radice: non si propone mai al Cestino.
+    if let (Ok(radice_canonica), Ok(percorso_canonico)) = (
+        lume_core::canonical_path(radice),
+        lume_core::canonical_path_lenient(percorso),
+    ) && radice_canonica == percorso_canonico
+    {
         return Err(fuori());
     }
     if percorso
@@ -52,10 +63,7 @@ pub fn dentro_progetto(radice: &Path, percorso: &Path) -> Result<(), String> {
     {
         return Err(fuori());
     }
-    let radice_canonica = lume_core::canonical_path(radice).map_err(|_| fuori())?;
-    let cartella = percorso.parent().ok_or_else(fuori)?;
-    let cartella_canonica = lume_core::canonical_path(cartella).map_err(|_| fuori())?;
-    if !cartella_canonica.starts_with(&radice_canonica) {
+    if !lume_core::path_is_within(radice, percorso) {
         return Err(fuori());
     }
     Ok(())
@@ -79,13 +87,7 @@ fn verifica_tipo(percorso: &Path, cartella: bool) -> Result<(), String> {
 /// Risolve anche un percorso il cui ultimo tratto non esiste più: gli
 /// antenati esistenti conservano il legame degli alias con la cartella.
 fn risolvi_antenati(percorso: &Path) -> Option<PathBuf> {
-    for antenato in percorso.ancestors() {
-        if let Ok(mut canonico) = lume_core::canonical_path(antenato) {
-            canonico.push(percorso.strip_prefix(antenato).ok()?);
-            return Some(canonico);
-        }
-    }
-    None
+    lume_core::canonical_path_lenient(percorso).ok()
 }
 
 /// I documenti aperti che puntano a quel file, con le modifiche non salvate.

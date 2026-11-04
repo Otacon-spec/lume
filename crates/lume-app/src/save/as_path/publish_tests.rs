@@ -2,7 +2,8 @@
 use super::*;
 use lume_core::file_write::prepare_atomic_resolved;
 struct Fixture {
-    dir: tempfile::TempDir,
+    /// Tiene viva la cartella per tutta la durata della fixture.
+    _dir: tempfile::TempDir,
     dest: PathBuf,
     other: PathBuf,
     selected: PathBuf,
@@ -12,16 +13,20 @@ struct Fixture {
 impl Fixture {
     fn new() -> io::Result<Self> {
         let dir = tempfile::tempdir()?;
-        let dest = dir.path().join("target.txt");
-        let other = dir.path().join("altro.txt");
-        let selected = dir.path().join("link.txt");
+        // Il contratto di `prepare_atomic_resolved` riceve un nome già
+        // canonico: la fixture parte dalla stessa forma che produce
+        // `as_path::resolved`, anche quando la TMPDIR attraversa un symlink.
+        let base = std::fs::canonicalize(dir.path())?;
+        let dest = base.join("target.txt");
+        let other = base.join("altro.txt");
+        let selected = base.join("link.txt");
         fs::write(&dest, b"origine")?;
         fs::write(&other, b"conservare")?;
         std::os::unix::fs::symlink(&dest, &selected)?;
         let mut ws = lume_core::Workspace::new();
         let id = ws.open(None, "NO");
         Ok(Self {
-            dir,
+            _dir: dir,
             dest,
             other,
             selected,
@@ -40,7 +45,11 @@ impl Fixture {
         Ok(())
     }
     fn count(&self) -> io::Result<usize> {
-        Ok(fs::read_dir(self.dir.path())?.count())
+        let base = self
+            .dest
+            .parent()
+            .ok_or_else(|| io::Error::other("destinazione senza cartella"))?;
+        Ok(fs::read_dir(base)?.count())
     }
 }
 fn failure<T>(result: Result<T, String>) -> String {
@@ -89,7 +98,11 @@ fn cleanup_fallito_reale_preserva_diagnosi_e_non_riprova_commit() -> io::Result<
     // Rimuovere il SOLO temporaneo della fixture: errore unlink reale su
     // abort, non filesystem finto né simulazione di altre fasi di cleanup.
     let mut temp = None;
-    for entry in fs::read_dir(f.dir.path())? {
+    let base = f
+        .dest
+        .parent()
+        .ok_or_else(|| io::Error::other("destinazione senza cartella"))?;
+    for entry in fs::read_dir(base)? {
         let path = entry?.path();
         if path != f.dest && path != f.other && path != f.selected {
             assert!(temp.is_none());

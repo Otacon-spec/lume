@@ -640,7 +640,7 @@ impl Lume {
         let outside_project = self
             .project_root
             .as_deref()
-            .is_none_or(|root| !path.starts_with(root));
+            .is_none_or(|root| !lume_core::path_is_within(root, &path));
         self.open_file_task(
             path,
             crate::file_read::DopoApertura::Avvio {
@@ -1324,7 +1324,7 @@ impl Lume {
         };
         self.project_watch_directories = paths
             .into_iter()
-            .filter(|path| path == root || path.starts_with(root))
+            .filter(|path| lume_core::path_is_within(root, path))
             .collect();
         self.project_watch_directories.insert(root.to_path_buf());
     }

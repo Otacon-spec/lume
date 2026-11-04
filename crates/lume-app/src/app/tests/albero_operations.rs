@@ -16,10 +16,15 @@ fn cestino_isolato(nome_test: &str) -> Option<std::path::PathBuf> {
         return Some(base.into());
     }
     let base = tempfile::tempdir().unwrap();
+    let home = base.path().join("home");
+    std::fs::create_dir_all(&home).unwrap();
     let esito = std::process::Command::new(std::env::current_exe().unwrap())
         .args(["--exact", nome_test, "--test-threads=1", "--nocapture"])
         .env(variabile, base.path())
         .env("XDG_DATA_HOME", base.path().join("xdg"))
+        // Su macOS `root_from` usa `HOME/.Trash`, non XDG: senza HOME
+        // privato il figlio scriverebbe nel Cestino vero dell'utente.
+        .env("HOME", &home)
         .status()
         .unwrap();
     assert!(esito.success(), "test isolato: {esito}");
@@ -1931,10 +1936,13 @@ fn cartella_worker_reale_chiude_solo_le_schede_interessate_dopo_il_cestino() {
     let isolated = std::env::var_os("LUME_TEST_CARTELLA_CESTINO");
     let Some(isolated) = isolated else {
         let dir = tempfile::tempdir().unwrap();
+        let home = dir.path().join("home");
+        std::fs::create_dir_all(&home).unwrap();
         let status = std::process::Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "app::tests::albero_operations::cartella_worker_reale_chiude_solo_le_schede_interessate_dopo_il_cestino", "--test-threads=1", "--nocapture"])
             .env("LUME_TEST_CARTELLA_CESTINO", dir.path())
             .env("XDG_DATA_HOME", dir.path().join("xdg"))
+            .env("HOME", &home)
             .status().unwrap();
         assert!(status.success());
         return;

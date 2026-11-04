@@ -122,11 +122,27 @@ fn same_component(left: Component<'_>, right: Component<'_>) -> bool {
 }
 
 /// Restituisce il percorso relativo per componenti, non per prefisso testuale.
+///
+/// Se le due forme scritte non coincidono (un antenato symlink cambia il
+/// prefisso, come `/var` su macOS) il confronto si ripete sui percorsi
+/// canonici: il file è lo stesso anche quando il nome per esteso non lo dice.
 #[must_use]
 pub fn relative_path(workspace: &Path, file: &Path) -> Option<PathBuf> {
     if has_parent(workspace) || has_parent(file) {
         return None;
     }
+    if let Some(relative) = relative_by_components(workspace, file) {
+        return Some(relative);
+    }
+    if !workspace.is_absolute() || !file.is_absolute() {
+        return None;
+    }
+    let workspace = lume_core::canonical_path_lenient(workspace).ok()?;
+    let file = lume_core::canonical_path_lenient(file).ok()?;
+    relative_by_components(&workspace, &file)
+}
+
+fn relative_by_components(workspace: &Path, file: &Path) -> Option<PathBuf> {
     let mut remaining = file.components();
     for root_component in workspace.components() {
         if !same_component(root_component, remaining.next()?) {

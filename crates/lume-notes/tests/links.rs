@@ -124,6 +124,27 @@ fn il_percorso_relativo_si_calcola_per_componenti() {
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn il_percorso_relativo_unisce_un_antenato_symlink() {
+    let cartella = tempfile::tempdir().unwrap();
+    let radice = lume_core::canonical_path(cartella.path())
+        .unwrap()
+        .join("progetto");
+    std::fs::create_dir_all(radice.join("src")).unwrap();
+    std::fs::write(radice.join("src/a.rs"), b"fn a() {}\n").unwrap();
+    let link = cartella.path().join("alias");
+    std::os::unix::fs::symlink(&radice, &link).unwrap();
+    assert_eq!(
+        relative_path(&radice, &link.join("src/a.rs")),
+        Some(PathBuf::from("src").join("a.rs"))
+    );
+    let esterna = tempfile::tempdir().unwrap();
+    let fuori = esterna.path().join("fuori.rs");
+    std::fs::write(&fuori, b"x").unwrap();
+    assert_eq!(relative_path(&radice, &fuori), None);
+}
+
 #[test]
 fn risolvere_un_collegamento_rivalida_il_percorso() {
     let valid = link("src/main.rs", 1, 2);

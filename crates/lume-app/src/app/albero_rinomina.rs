@@ -95,7 +95,7 @@ pub fn rinomina(
         .map(|nome| nome.to_string_lossy().into_owned())
         .unwrap_or_default();
     nome_diverso(nome, &attuale)?;
-    if !percorso.starts_with(radice) {
+    if !lume_core::path_is_within(radice, percorso) {
         return Err("il file non è dentro il progetto".to_owned());
     }
     let cartella = percorso.parent().ok_or("il percorso non ha una cartella")?;
@@ -197,7 +197,7 @@ impl super::Lume {
         let Some(radice) = self.project_root.clone() else {
             return self.notify_error("Nessun progetto aperto: non c'è cosa rinominare".to_owned());
         };
-        if !path.starts_with(&radice) {
+        if !lume_core::path_is_within(&radice, path) {
             return self.notify_error("Il file non è dentro il progetto".to_owned());
         }
         let Some(nome_attuale) = path
@@ -278,7 +278,7 @@ impl super::Lume {
             .collect();
         let preflight = super::albero_rinomina::nome_diverso(&nome, &richiesta.nome_attuale)
             .and_then(|()| {
-                if !percorso.starts_with(&radice) {
+                if !lume_core::path_is_within(&radice, &percorso) {
                     Err("il file non è dentro il progetto".to_owned())
                 } else if percorso.parent().is_none() || percorso.file_name().is_none() {
                     Err("il percorso non ha una cartella o un nome".to_owned())

@@ -21,7 +21,7 @@ pub mod trash;
 pub mod watcher;
 pub mod workspace;
 
-pub use canonical::canonical_path;
+pub use canonical::{canonical_path, canonical_path_lenient, path_is_within};
 pub use document::{AppliedEdit, DocId, Document, PreparedReload, PreparedText, SaveSnapshot};
 pub use error::CoreError;
 pub use fs_tree::{FsNode, FsTree, RowSpec};

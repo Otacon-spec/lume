@@ -304,21 +304,29 @@ pub fn relative_to_root(root: &Path, path: &Path) -> Option<PathBuf> {
     if let Ok(relative) = path.strip_prefix(root) {
         return Some(relative.to_path_buf());
     }
-    if !cfg!(windows) {
-        return None;
-    }
-    let mut parts = path.components();
-    for root_part in root.components() {
-        let same = parts.next().is_some_and(|part| {
-            part.as_os_str()
-                .to_string_lossy()
-                .eq_ignore_ascii_case(&root_part.as_os_str().to_string_lossy())
+    if cfg!(windows) {
+        let mut parts = path.components();
+        let same_on_windows = root.components().all(|root_part| {
+            parts.next().is_some_and(|part| {
+                part.as_os_str()
+                    .to_string_lossy()
+                    .eq_ignore_ascii_case(&root_part.as_os_str().to_string_lossy())
+            })
         });
-        if !same {
-            return None;
+        if same_on_windows {
+            return Some(parts.collect());
         }
     }
-    Some(parts.collect())
+    // La radice MCP è canonica, il documento può essere stato aperto con un
+    // percorso che attraversa un antenato symlink: il prefisso testuale
+    // differisce anche se il file è dentro il progetto. Il confronto decisivo
+    // è fra percorsi canonici, non fra le loro forme scritte.
+    if !root.is_absolute() || !path.is_absolute() {
+        return None;
+    }
+    let root = lume_core::canonical_path_lenient(root).ok()?;
+    let path = lume_core::canonical_path_lenient(path).ok()?;
+    path.strip_prefix(&root).ok().map(Path::to_path_buf)
 }
 
 pub fn same_relative(a: &Path, b: &Path) -> bool {
@@ -640,6 +648,32 @@ mod tests {
             Ok(lume_mcp::McpCommand::ToolsChanged(value)) if value == git
         ));
         assert!(rx.try_recv().is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn la_radice_si_riconosce_attraverso_un_antenato_symlink() {
+        let cartella = tempfile::tempdir().unwrap();
+        let radice = lume_core::canonical_path(cartella.path())
+            .unwrap()
+            .join("progetto");
+        std::fs::create_dir_all(radice.join("src")).unwrap();
+        std::fs::write(radice.join("src/a.rs"), b"fn a() {}\n").unwrap();
+        let link = cartella.path().join("alias");
+        std::os::unix::fs::symlink(&radice, &link).unwrap();
+        assert_eq!(
+            relative_to_root(&radice, &link.join("src/a.rs")),
+            Some(PathBuf::from("src/a.rs"))
+        );
+        // Un ultimo tratto non ancora creato resta relativo.
+        assert_eq!(
+            relative_to_root(&radice, &link.join("src/nuovo.rs")),
+            Some(PathBuf::from("src/nuovo.rs"))
+        );
+        assert_eq!(
+            relative_to_root(&radice, &link.join("..").join("fuori.rs")),
+            None
+        );
     }
 
     #[cfg(windows)]
