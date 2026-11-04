@@ -3,6 +3,7 @@
 mod catalog;
 mod discovery;
 mod install;
+mod tls;
 
 pub use catalog::{
     ArchiveFormat, CatalogError, DistributionMode, Platform, PlatformAsset, ReleaseSpec,
@@ -13,3 +14,4 @@ pub use discovery::{
     describe_unavailable,
 };
 pub use install::{CancelFlag, InstallError, InstallProgress, InstallReceipt, ServerInstaller};
+pub use tls::install_crypto_provider;

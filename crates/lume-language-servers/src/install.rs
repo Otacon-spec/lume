@@ -188,6 +188,7 @@ fn download_asset(
     cancel: &CancelFlag,
     progress: &mut impl FnMut(InstallProgress),
 ) -> Result<Vec<u8>, InstallError> {
+    crate::install_crypto_provider();
     let client = Client::builder()
         .redirect(Policy::none())
         .connect_timeout(Duration::from_secs(15))

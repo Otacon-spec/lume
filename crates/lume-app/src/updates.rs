@@ -237,8 +237,7 @@ fn controlla_da(
 ) -> Result<Esito, String> {
     // `reqwest` è compilato senza provider rustls: chi non ha mai aperto una
     // connessione SQL andrebbe in panic qui. La funzione è idempotente.
-    #[cfg(feature = "sql")]
-    lume_sql::install_crypto_provider();
+    lume_language_servers::install_crypto_provider();
     let client = reqwest::blocking::Client::builder()
         .timeout(attesa)
         .user_agent(AGENTE)
