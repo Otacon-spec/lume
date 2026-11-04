@@ -60,7 +60,7 @@ jobs:
         shell: pwsh
         run: ./tools/build_release_bundle.ps1 -OutputDirectory artifacts
       - name: Conserva zip e checksum del run di prova
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lume-bundle-windows-x86_64
           path: |
