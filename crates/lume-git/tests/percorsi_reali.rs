@@ -1,6 +1,8 @@
 //! Prerequisito dei piani di integrazione: nomi Git reali non lossy.
 //! Solo fixture TempDir e Git CLI per costruzione/verifica; backend gix vero.
-#![cfg(unix)]
+//! APFS (macOS) rifiuta per costruzione i nomi non UTF-8 (EILSEQ): questi
+//! file su disco esistono solo sugli altri Unix.
+#![cfg(all(unix, not(target_vendor = "apple")))]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 mod common;
 use lume_git::{ChangeKind, DiffRow, DiffSign, GitRepository};

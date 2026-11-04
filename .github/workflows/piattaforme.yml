@@ -79,7 +79,7 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets --no-deps --locked -- -D warnings
       - name: Test
-        run: cargo test --workspace --locked --all-features
+        run: cargo test --workspace --locked --all-features --no-fail-fast
       - name: Test d'integrazione Jujutsu reale
         run: cargo test -p lume-jj --test jj_reale --locked -- --ignored
       - name: Build GUI per la prova Xvfb
@@ -178,7 +178,7 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked --all-features -- -D warnings
       - name: Test
-        run: cargo test --workspace --locked --all-features
+        run: cargo test --workspace --locked --all-features --no-fail-fast
       - name: Regressione rimappatura percorsi personali
         run: bash tools/test_pacchetto_unix_path_remap.sh
       - name: Pacchetto macOS

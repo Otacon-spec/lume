@@ -99,10 +99,13 @@ fn metadata_git_e_absolute_con_parentdir_non_si_toccano() {
 fn nomi_non_utf8_e_backslash_non_diventano_altri_file() {
     use std::{ffi::OsString, os::unix::ffi::OsStringExt};
     lume_testkit::richiedi!(lume_testkit::Strumento::Git);
-    for name in [
-        OsString::from_vec(b"nome-\xff.txt".to_vec()),
-        OsString::from("nome\\file.txt"),
-    ] {
+    // APFS rifiuta per costruzione i nomi non UTF-8 (EILSEQ): su macOS resta
+    // il caso della barra rovesciata.
+    let mut nomi = vec![OsString::from("nome\\file.txt")];
+    if !cfg!(target_vendor = "apple") {
+        nomi.push(OsString::from_vec(b"nome-\xff.txt".to_vec()));
+    }
+    for name in nomi {
         let root = common::init_repo();
         let path = PathBuf::from(name);
         fs::write(root.path().join(&path), "originale\n").unwrap();

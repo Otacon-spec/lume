@@ -175,7 +175,8 @@ fn directory_ignorata_occupata_blocca_sostituzione_del_parent() {
         b"da conservare\n"
     );
 }
-#[cfg(unix)]
+// APFS (macOS) rifiuta i nomi non UTF-8: il caso esiste solo sugli altri Unix.
+#[cfg(all(unix, not(target_vendor = "apple")))]
 #[test]
 fn percorsi_raw_distinti_e_backslash_literalmente_toccati() {
     use std::os::unix::ffi::OsStringExt;

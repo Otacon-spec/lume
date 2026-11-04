@@ -7331,7 +7331,7 @@ mod appunti_scarico_tests {
             info.lines()
                 .any(|riga| riga == format!("Path={}", note.path().display()))
         );
-        let alias_canonico = std::fs::canonicalize(&alias).unwrap();
+        let alias_canonico = lume_core::canonical_path(&alias).unwrap();
         assert!(
             store
                 .scan()
@@ -11210,7 +11210,7 @@ mod appunti_scarico_tests {
             // Il server MCP usa la radice canonica: la fixture fa lo stesso,
             // altrimenti un antenato symlink (TMPDIR su macOS) crea due forme
             // dello stesso progetto e i confronti dell'app non le uniscono.
-            std::fs::canonicalize(&path).unwrap()
+            lume_core::canonical_path(&path).unwrap()
         }
 
         /// Crack privata 0700 sotto `$HOME`: la scoperta Unix rifiuta
