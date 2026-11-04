@@ -493,8 +493,11 @@ mod tests {
     async fn native_event_and_drop_collect_both_workers()
     -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let dir = tempfile::tempdir()?;
-        let (owner, mut events) = FsBridge::start(&[dir.path().to_path_buf()])?;
-        let path = dir.path().join("città.txt");
+        // FSEvents (macOS) riporta i percorsi canonici: /var/... è un link a
+        // /private/var/..., quindi si osserva e si confronta la forma canonica.
+        let radice = lume_core::canonical_path(dir.path())?;
+        let (owner, mut events) = FsBridge::start(std::slice::from_ref(&radice))?;
+        let path = radice.join("città.txt");
         std::fs::write(&path, "evento 😀")?;
         let event = tokio::time::timeout(std::time::Duration::from_secs(5), events.next())
             .await?

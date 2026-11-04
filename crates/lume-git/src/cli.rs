@@ -571,7 +571,13 @@ impl ProcessOwner {
             // non usare mai il gruppo del processo Lume.
             if unsafe { libc::kill(-group, libc::SIGKILL) } != 0 {
                 let error = io::Error::last_os_error();
-                if error.raw_os_error() != Some(libc::ESRCH) {
+                // ESRCH: gruppo vuoto. Su macOS, se resta solo il leader
+                // zombie (WNOWAIT in `finished`), killpg risponde EPERM
+                // invece di ESRCH: anche lì nessun membro vivo. Con un membro
+                // vivo il kill riesce, quindi EPERM non nasconde processi.
+                let gruppo_senza_vivi = error.raw_os_error() == Some(libc::ESRCH)
+                    || (cfg!(target_vendor = "apple") && error.raw_os_error() == Some(libc::EPERM));
+                if !gruppo_senza_vivi {
                     return Err(error);
                 }
             }

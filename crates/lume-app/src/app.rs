@@ -10155,7 +10155,7 @@ mod appunti_scarico_tests {
         assert_eq!(note.len(), 1);
         // Lo store conserva la radice canonica: il confronto usa la stessa
         // forma, non il percorso della TMPDIR eventualmente dietro un link.
-        let cartella_canonica = std::fs::canonicalize(cartella.path()).unwrap();
+        let cartella_canonica = lume_core::canonical_path(cartella.path()).unwrap();
         assert!(note[0].path.starts_with(&cartella_canonica));
 
         let task = app.update(Message::NotesScanned(

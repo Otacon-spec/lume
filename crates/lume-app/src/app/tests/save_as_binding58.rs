@@ -489,9 +489,14 @@ fn save_as_private_bom_crlf_non_utf8_e_readonly_reali() {
     let mut app = app();
     let old = write_and_open(&mut app, dir.path(), "old.txt", "\u{feff}prima\r\n");
     let id = app.active_doc().unwrap();
-    let path = dir
-        .path()
-        .join(OsString::from_vec(b"nuovo\\\xff.txt".to_vec()));
+    // APFS rifiuta per costruzione i nomi non UTF-8 (EILSEQ): su macOS resta
+    // la barra rovesciata, altrove anche il byte non UTF-8.
+    let nome: &[u8] = if cfg!(target_vendor = "apple") {
+        b"nuovo\\x.txt"
+    } else {
+        b"nuovo\\\xff.txt"
+    };
+    let path = dir.path().join(OsString::from_vec(nome.to_vec()));
     let task = app.save_as(id, path.clone());
     app.completa_salvataggi(task);
     assert_eq!(std::fs::read(&path).unwrap(), b"\xef\xbb\xbfprima\r\n");
