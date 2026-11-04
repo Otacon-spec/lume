@@ -225,10 +225,14 @@ impl Layer {
             &previous.text,
             &current.text,
             |item| {
+                // Come quad e immagini, 1 px in più per l'antialiasing: con
+                // alcuni font (Consolas su Windows) il glifo sborda dai bounds
+                // e il ridisegno parziale lascerebbe pixel vecchi al bordo.
                 item.as_slice()
                     .iter()
                     .filter_map(Text::visible_bounds)
                     .map(|bounds| bounds * item.transformation())
+                    .filter_map(|bounds| bounds.expand(1.0).intersection(&current.bounds))
                     .collect()
             },
             |text_a, text_b| {
@@ -239,6 +243,7 @@ impl Layer {
                         text.visible_bounds()
                             .into_iter()
                             .map(|bounds| bounds * text_a.transformation())
+                            .filter_map(|bounds| bounds.expand(1.0).intersection(&current.bounds))
                             .collect()
                     },
                     |text_a, text_b| {

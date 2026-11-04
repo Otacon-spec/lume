@@ -1,0 +1,24 @@
+# Build
+/target
+/.worktrees/
+
+# Bundle di release: ~1,2 GB, e dentro non c'e' solo lume.exe — ci sono i
+# binari dei language server di terze parti (rust-analyzer, rumdl, tombi).
+# Un `git add -A` distratto li mette nella storia, e dalla storia non escono
+# piu'. Le release vivono su GitHub Releases, non qui.
+/artifacts/
+
+# Misure di tools/measure-corporate.ps1: contengono percorsi assoluti della
+# macchina e lo stato dell'antivirus, e non vanno pubblicate.
+measurements/
+
+# Cache locali e stato degli agenti: non fanno parte del sorgente.
+.cache/
+.pi/
+# Anche senza slash: target puo' essere un collegamento simbolico.
+target
+
+
+# Cache Python degli script in tools/: non fanno parte del sorgente.
+__pycache__/
+*.pyc
