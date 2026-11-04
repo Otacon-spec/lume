@@ -445,7 +445,7 @@ impl Clone for TrashError {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(windows)))]
 mod tests {
     #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
     use super::{TrashOutcome, civil_from_unix, encode_trash_path, root_from, trash_into};

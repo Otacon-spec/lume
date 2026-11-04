@@ -40,8 +40,12 @@ jobs:
           echo "$RUNNER_TEMP/jj-cli/bin" >> "$GITHUB_PATH"
       - name: Guardia albero Linux keyring
         run: bash tools/ci/verifica_albero_linux.sh
+      - name: Compila il test della cassaforte (fuori dal timeout)
+        run: cargo test -p lume-sql --lib --locked --no-run
       - name: Cassaforte di sistema Linux
         run: |
+          # Il timeout copre solo il giro contro la cassaforte: la
+          # compilazione da zero è nel passo precedente.
           dbus-run-session -- timeout 90s bash -euo pipefail -c '
             tmp=$(mktemp -d "${RUNNER_TEMP:-/tmp}/lume-keyring.XXXXXX")
             export XDG_DATA_HOME="$tmp/data"
