@@ -21,7 +21,7 @@ jobs:
     name: fmt, clippy, test
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Toolchain
         shell: pwsh
         run: |
@@ -93,7 +93,7 @@ jobs:
     name: licenze e supply chain
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-about@0.9.2,cargo-deny
@@ -112,7 +112,7 @@ jobs:
     name: MSRV (rust-version di Cargo.toml)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Toolchain MSRV
         shell: pwsh
         run: |
@@ -139,7 +139,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Toolchain
         shell: pwsh
         run: |

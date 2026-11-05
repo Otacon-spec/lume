@@ -27,7 +27,7 @@ jobs:
     env:
       LUME_TEST_RICHIEDI_STRUMENTI: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Spazio su disco del runner
         # La build con tutte le feature più i test riempiva il runner
         # (No space left on device): si tolgono SDK preinstallati inutili.
@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Spazio su disco del runner
         # La build con tutte le feature più i test riempiva il runner
         # (No space left on device): si tolgono SDK preinstallati inutili.
@@ -157,7 +157,7 @@ jobs:
     env:
       LUME_TEST_RICHIEDI_STRUMENTI: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verifica architettura del runner
         run: test "$(uname -m)" = "${{ matrix.machine }}"
       - name: Toolchain
