@@ -70,7 +70,7 @@ jobs:
             artifacts/lume-*-windows-x86_64-*.zip.sha256
             artifacts/lume-*-windows-x86_64-*.zip.MANIFEST.json
       - name: Scarica il pacchetto Linux verificato
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: lume-linux-x86_64
           path: artifacts
