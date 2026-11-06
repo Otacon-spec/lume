@@ -48,6 +48,8 @@ tokio = { workspace = true }
 ignore = { workspace = true }
 jiff = { workspace = true }
 reqwest = { workspace = true }
+# Cartella Download dell'utente per «Scarica aggiornamento».
+directories = { workspace = true }
 wait-timeout = { workspace = true }
 sha2 = { workspace = true }
 roxmltree = { workspace = true, optional = true }

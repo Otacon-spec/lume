@@ -273,6 +273,9 @@ pub struct Lume {
     /// Branch git del progetto (da `GitLoaded`); None senza repo.
     pub branch: Option<String>,
     notice_seq: u64,
+    /// «Scarica aggiornamento» in corso: un secondo clic non ne avvia un
+    /// altro sullo stesso file.
+    scaricamento_aggiornamento: bool,
     /// Log a rotazione degli errori mostrati; attivo solo nell'avvio reale.
     error_log: Option<crate::error_log::ErrorLog>,
     /// Generazione delle letture git (cancellazione), come `search_gen`:
@@ -1177,6 +1180,7 @@ pub enum Message {
     /// aggiornamenti...). Sempre un `Result`: un controllo che fallisce
     /// in silenzio e' peggio di uno che non c'e'.
     UpdateChecked(Result<crate::updates::Esito, String>),
+    UpdateDownloaded(Result<crate::aggiornamento::EsitoScarica, String>),
     /// La lettura di un file chiesto dall'utente è tornata dal thread di
     /// lavoro (il testo non finisce mai in un log: vedi `Testo`).
     FileReadFinished(u64, Option<(DocId, u64)>, crate::file_read::LetturaFile),
@@ -1666,6 +1670,7 @@ impl Lume {
             watcher_scope: std::cell::RefCell::new(None),
             notice: None,
             notice_seq: 0,
+            scaricamento_aggiornamento: false,
             error_log: None,
             git_gen: std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0)),
             git_log_gen: std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0)),
@@ -1865,6 +1870,35 @@ impl Lume {
             Message::UpdateChecked,
         );
         Task::batch([attesa, richiesta])
+    }
+
+    /// «Aiuto → Scarica aggiornamento…»: controlla e, se c'è una versione
+    /// nuova per questa piattaforma, scarica lo zip ufficiale nella cartella
+    /// Download e ne verifica lo sha256. Non estrae e non sostituisce
+    /// `lume.exe`: su un PC con EDR un processo che riscrive sé stesso viene
+    /// bloccato. Solo su richiesta, come il controllo.
+    fn download_update(&mut self) -> Task<Message> {
+        if self.scaricamento_aggiornamento {
+            return self.notify(
+                NoticeKind::Info,
+                "Lo scaricamento dell'aggiornamento è già in corso".to_owned(),
+            );
+        }
+        self.scaricamento_aggiornamento = true;
+        // Persistente: lo scaricamento può durare minuti e l'esito la
+        // sostituisce.
+        self.notify_persistente(
+            NoticeKind::Info,
+            "Controllo e scarico l'aggiornamento…".to_owned(),
+        );
+        Task::perform(
+            async {
+                tokio::task::spawn_blocking(crate::aggiornamento::controlla_e_scarica)
+                    .await
+                    .unwrap_or_else(|errore| Err(errore.to_string()))
+            },
+            Message::UpdateDownloaded,
+        )
     }
 
     /// Token del tema corrente (per le view).
@@ -2242,6 +2276,19 @@ impl Lume {
                 return match esito {
                     Ok(esito) => self.notify(NoticeKind::Info, esito.messaggio()),
                     Err(errore) => self.notify_error(errore),
+                };
+            }
+            Message::UpdateDownloaded(esito) => {
+                self.scaricamento_aggiornamento = false;
+                return match esito {
+                    // Il percorso del file va riletto con calma: resta finché
+                    // l'utente non la chiude.
+                    Ok(esito @ crate::aggiornamento::EsitoScarica::Scaricato(_)) => {
+                        self.notify_persistente(NoticeKind::Info, esito.messaggio());
+                        Task::none()
+                    }
+                    Ok(esito) => self.notify(NoticeKind::Info, esito.messaggio()),
+                    Err(errore) => self.notify_error(format!("Aggiornamento: {errore}")),
                 };
             }
             // Niente `return` secco: la coda di fine `update` (outline, pannello
@@ -5909,6 +5956,7 @@ impl Lume {
             MenuIntent::Activate(MenuAct::GotoLine) => self.open_goto_line(),
             MenuIntent::Activate(MenuAct::Shortcuts) => self.open_shortcuts(),
             MenuIntent::Activate(MenuAct::CheckUpdates) => self.check_updates(),
+            MenuIntent::Activate(MenuAct::DownloadUpdate) => self.download_update(),
             MenuIntent::Activate(MenuAct::About) => {
                 self.apri_overlay(OverlayId::About);
                 Task::none()

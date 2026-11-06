@@ -10,6 +10,7 @@
 
 mod about;
 mod activity;
+mod aggiornamento;
 mod app;
 mod app_icon;
 mod appearance;

@@ -4,7 +4,7 @@ members = ["crates/*", "vendor/iced_tiny_skia"]
 exclude = ["vendor/tree-sitter"]
 
 [workspace.package]
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 # oracledb 26.0.0-beta.2 chiede 1.89 (rust-version nel suo Cargo.toml); la CI la verifica.
 rust-version = "1.89"

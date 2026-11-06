@@ -625,6 +625,66 @@ fn un_errore_sopra_informazioni_la_sostituisce_e_scade_da_se() {
     assert!(app.notice.is_none(), "l'errore scade come sempre");
 }
 
+/// «Aiuto → Scarica aggiornamento…»: il clic mostra subito che il lavoro è
+/// partito; il file scaricato resta a schermo, un errore scade come sempre.
+#[test]
+fn scarica_aggiornamento_dal_menu_avvisa_e_mostra_il_percorso() {
+    use crate::aggiornamento::{EsitoScarica, Scaricato};
+    use crate::menu::MenuAct;
+
+    let mut app = app();
+    let _ = app.update(Message::MenuAction(MenuAct::DownloadUpdate));
+    assert!(
+        app.notice
+            .as_ref()
+            .is_some_and(|(_, n)| n.persistente && n.text.contains("scarico l'aggiornamento")),
+        "il clic non resta muto"
+    );
+    // Un secondo clic mentre il primo lavora non ne avvia un altro.
+    let _ = app.update(Message::MenuAction(MenuAct::DownloadUpdate));
+    assert!(
+        app.notice
+            .as_ref()
+            .is_some_and(|(_, n)| n.text.contains("già in corso")),
+        "il secondo clic è rifiutato con un avviso"
+    );
+    let percorso =
+        std::path::PathBuf::from("Download").join("lume-9.9.9-windows-x86_64-0123456789ab.zip");
+    let _ = app.update(Message::UpdateDownloaded(Ok(EsitoScarica::Scaricato(
+        Scaricato {
+            percorso: percorso.clone(),
+            sha256: "ab".repeat(32),
+        },
+    ))));
+    let (id, notice) = app
+        .notice
+        .as_ref()
+        .map(|(id, notice)| (*id, notice))
+        .expect("l'esito");
+    assert!(notice.persistente);
+    assert!(
+        notice.text.contains(&percorso.display().to_string()),
+        "{}",
+        notice.text
+    );
+    let _ = app.update(Message::NoticeExpired(id));
+    assert!(app.notice.is_some(), "il percorso non sparisce da solo");
+
+    let _ = app.update(Message::UpdateDownloaded(Err(
+        "sha256 non corrisponde".to_owned()
+    )));
+    let notice = &app.notice.as_ref().expect("l'errore").1;
+    assert!(!notice.persistente);
+    assert_eq!(notice.text, "Aggiornamento: sha256 non corrisponde");
+    let _ = app.update(Message::MenuAction(MenuAct::DownloadUpdate));
+    assert!(
+        app.notice
+            .as_ref()
+            .is_some_and(|(_, n)| n.text.contains("scarico l'aggiornamento")),
+        "finito il primo, se ne può avviare un altro"
+    );
+}
+
 #[test]
 fn open_file_ok_e_fallito() {
     let dir = tempfile::tempdir().unwrap();

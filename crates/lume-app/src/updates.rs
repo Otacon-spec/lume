@@ -120,16 +120,58 @@ impl Piattaforma {
         }
     }
 
-    fn nome_pacchetto(self, versione: Versione) -> Option<String> {
-        let nome = match self {
-            Self::WindowsX64 => "Lume-Bundle-windows-x86_64.zip".to_owned(),
-            Self::LinuxX64 => format!("lume-{versione}-linux-x86_64.tar.gz"),
-            Self::MacosAarch64 => format!("lume-{versione}-macos-aarch64.tar.gz"),
-            Self::MacosX64 => format!("lume-{versione}-macos-x86_64.tar.gz"),
+    /// Radice ed estensione del pacchetto: `lume-{versione}-{target}` e
+    /// `.zip`/`.tar.gz`. Il nome pubblicato inserisce lo SHA a 12 cifre del
+    /// commit fra le due (`lume-0.4.1-windows-x86_64-0123456789ab.zip`).
+    fn forma_pacchetto(self, versione: Versione) -> Option<(String, &'static str)> {
+        let (target, estensione) = match self {
+            Self::WindowsX64 => ("windows-x86_64", ".zip"),
+            Self::LinuxX64 => ("linux-x86_64", ".tar.gz"),
+            Self::MacosAarch64 => ("macos-aarch64", ".tar.gz"),
+            Self::MacosX64 => ("macos-x86_64", ".tar.gz"),
             Self::NonSupportata => return None,
         };
-        Some(nome)
+        Some((format!("lume-{versione}-{target}"), estensione))
     }
+
+    /// `nome` è il pacchetto di questa piattaforma per `versione`? Accetta lo
+    /// SHA a 12 cifre esadecimali minuscole oppure nessuno SHA.
+    fn riconosce(self, versione: Versione, nome: &str) -> bool {
+        let Some((radice, estensione)) = self.forma_pacchetto(versione) else {
+            return false;
+        };
+        let Some(centro) = nome
+            .strip_prefix(radice.as_str())
+            .and_then(|resto| resto.strip_suffix(estensione))
+        else {
+            return false;
+        };
+        centro.is_empty()
+            || centro.strip_prefix('-').is_some_and(|sha| {
+                sha.len() == 12 && sha.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+            })
+    }
+
+    /// Su questa piattaforma Lume sa scaricare e verificare da sé il
+    /// pacchetto? Solo scaricare: l'estrazione resta all'utente.
+    pub fn installabile(self) -> bool {
+        matches!(self, Self::WindowsX64 | Self::LinuxX64)
+    }
+}
+
+/// Il pacchetto di una release, con quanto serve per scaricarlo e
+/// verificarlo.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Pacchetto {
+    pub nome: String,
+    /// `browser_download_url` dell'asset.
+    pub url: String,
+    /// Dimensione dichiarata da GitHub, in byte.
+    pub dimensione: u64,
+    /// L'asset `<nome>.sha256` pubblicato accanto, se c'è.
+    pub checksum_url: Option<String>,
+    /// Lume sa scaricarlo e verificarlo da sé su questa piattaforma.
+    pub installabile: bool,
 }
 
 /// Cosa dire all'utente dopo il controllo.
@@ -141,7 +183,7 @@ pub enum Esito {
     Disponibile {
         versione: Versione,
         pagina: String,
-        pacchetto: Option<String>,
+        pacchetto: Option<Pacchetto>,
         piattaforma: &'static str,
     },
 }
@@ -153,10 +195,21 @@ impl Esito {
             Self::Aggiornato(v) => format!("Lume {v} è l'ultima versione."),
             Self::Disponibile {
                 versione,
+                pacchetto:
+                    Some(Pacchetto {
+                        nome,
+                        installabile: true,
+                        checksum_url: Some(_),
+                        ..
+                    }),
+                ..
+            } => format!("Disponibile Lume {versione} ({nome}): Aiuto → Scarica aggiornamento…"),
+            Self::Disponibile {
+                versione,
                 pagina,
                 pacchetto: Some(pacchetto),
                 ..
-            } => format!("Disponibile Lume {versione} ({pacchetto}): {pagina}"),
+            } => format!("Disponibile Lume {versione} ({}): {pagina}", pacchetto.nome),
             Self::Disponibile {
                 versione,
                 pagina,
@@ -202,22 +255,57 @@ fn confronta_per(
             || format!("https://github.com/{REPO}/releases/tag/{tag}"),
             ToOwned::to_owned,
         );
-    let pacchetto_atteso = piattaforma.nome_pacchetto(ultima);
-    let pacchetto = json
+    let assets = json
         .get("assets")
         .and_then(serde_json::Value::as_array)
-        .and_then(|assets| {
-            assets.iter().find_map(|asset| {
-                let nome = asset.get("name").and_then(serde_json::Value::as_str)?;
-                (Some(nome) == pacchetto_atteso.as_deref()).then(|| nome.to_owned())
-            })
-        });
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    let nome_di = |asset: &serde_json::Value| {
+        asset
+            .get("name")
+            .and_then(serde_json::Value::as_str)
+            .map(ToOwned::to_owned)
+    };
+    let url_di = |asset: &serde_json::Value| {
+        asset
+            .get("browser_download_url")
+            .and_then(serde_json::Value::as_str)
+            .map(ToOwned::to_owned)
+    };
+    let pacchetto = assets.iter().find_map(|asset| {
+        let nome = nome_di(asset)?;
+        if !piattaforma.riconosce(ultima, &nome) {
+            return None;
+        }
+        let checksum = format!("{nome}.sha256");
+        let checksum_url = assets
+            .iter()
+            .find(|altro| nome_di(altro).as_deref() == Some(checksum.as_str()))
+            .and_then(url_di);
+        Some(Pacchetto {
+            url: url_di(asset).unwrap_or_default(),
+            dimensione: asset
+                .get("size")
+                .and_then(serde_json::Value::as_u64)
+                .unwrap_or(0),
+            checksum_url,
+            installabile: piattaforma.installabile(),
+            nome,
+        })
+    });
     Ok(Esito::Disponibile {
         versione: ultima,
         pagina,
         pacchetto,
         piattaforma: piattaforma.nome(),
     })
+}
+
+/// `confronta` come se girasse su Windows x86_64: per le prove in rete
+/// dello scaricamento, che girano su Linux.
+#[cfg(test)]
+pub fn confronta_per_piattaforma_windows(corpo: &str, corrente: Versione) -> Result<Esito, String> {
+    confronta_per(corpo, corrente, Piattaforma::WindowsX64)
 }
 
 /// Chiede a GitHub l'ultima release. **Bloccante**: va in `spawn_blocking`.
@@ -340,17 +428,49 @@ mod tests {
     }
 
     #[test]
-    fn una_release_piu_recente_porta_la_sua_pagina() {
-        let corpo = r#"{"tag_name":"v1.4.0","html_url":"https://example.invalid/r/1.4.0","assets":[{"name":"Lume-Bundle-windows-x86_64.zip"}]}"#;
+    fn una_release_piu_recente_porta_la_sua_pagina_e_il_pacchetto_pubblicato() {
+        let corpo = r#"{"tag_name":"v1.4.0","html_url":"https://example.invalid/r/1.4.0","assets":[
+            {"name":"lume-1.4.0-windows-x86_64-0123456789ab.zip","size":25296084,
+             "browser_download_url":"https://github.com/Otacon-spec/lume/releases/download/v1.4.0/lume-1.4.0-windows-x86_64-0123456789ab.zip"},
+            {"name":"lume-1.4.0-windows-x86_64-0123456789ab.zip.sha256","size":109,
+             "browser_download_url":"https://github.com/Otacon-spec/lume/releases/download/v1.4.0/lume-1.4.0-windows-x86_64-0123456789ab.zip.sha256"},
+            {"name":"lume-1.4.0-linux-x86_64-0123456789ab.tar.gz","size":1}]}"#;
+        let esito = confronta_per(corpo, v(1, 3, 9), Piattaforma::WindowsX64).unwrap();
         assert_eq!(
-            confronta_per(corpo, v(1, 3, 9), Piattaforma::WindowsX64),
-            Ok(Esito::Disponibile {
+            esito,
+            Esito::Disponibile {
                 versione: v(1, 4, 0),
                 pagina: "https://example.invalid/r/1.4.0".to_owned(),
-                pacchetto: Some("Lume-Bundle-windows-x86_64.zip".to_owned()),
+                pacchetto: Some(Pacchetto {
+                    nome: "lume-1.4.0-windows-x86_64-0123456789ab.zip".to_owned(),
+                    url: "https://github.com/Otacon-spec/lume/releases/download/v1.4.0/lume-1.4.0-windows-x86_64-0123456789ab.zip".to_owned(),
+                    dimensione: 25296084,
+                    checksum_url: Some("https://github.com/Otacon-spec/lume/releases/download/v1.4.0/lume-1.4.0-windows-x86_64-0123456789ab.zip.sha256".to_owned()),
+                    installabile: true,
+                }),
                 piattaforma: "Windows x86_64",
-            })
+            }
         );
+        assert!(esito.messaggio().contains("Aiuto → Scarica aggiornamento…"));
+    }
+
+    #[test]
+    fn nomi_simili_ma_sbagliati_non_sono_il_pacchetto() {
+        let p = Piattaforma::WindowsX64;
+        let ver = v(1, 4, 0);
+        assert!(p.riconosce(ver, "lume-1.4.0-windows-x86_64-0123456789ab.zip"));
+        assert!(p.riconosce(ver, "lume-1.4.0-windows-x86_64.zip"));
+        for sbagliato in [
+            "Lume-Bundle-windows-x86_64.zip",
+            "lume-1.4.0-windows-x86_64-0123456789ab.zip.sha256",
+            "lume-1.4.0-windows-x86_64-0123456789ab.zip.MANIFEST.json",
+            "lume-1.4.1-windows-x86_64-0123456789ab.zip",
+            "lume-1.4.0-windows-x86_64-0123456789AB.zip",
+            "lume-1.4.0-windows-x86_64-012345.zip",
+            "lume-1.4.0-linux-x86_64-0123456789ab.tar.gz",
+        ] {
+            assert!(!p.riconosce(ver, sbagliato), "{sbagliato}");
+        }
     }
 
     #[test]
@@ -381,7 +501,7 @@ mod tests {
         let esito = confronta_per(corpo, v(1, 3, 9), Piattaforma::MacosAarch64).unwrap();
         assert!(matches!(
             esito,
-            Esito::Disponibile { pacchetto: Some(nome), .. }
+            Esito::Disponibile { pacchetto: Some(Pacchetto { nome, installabile: false, .. }), .. }
                 if nome == "lume-1.4.0-macos-aarch64.tar.gz"
         ));
     }
@@ -389,14 +509,23 @@ mod tests {
     #[test]
     fn i_nomi_asset_rispecchiano_tutti_i_pacchetti_previsti() {
         for (piattaforma, nome) in [
+            (
+                Piattaforma::LinuxX64,
+                "lume-1.4.0-linux-x86_64-98a97400c8b1.tar.gz",
+            ),
             (Piattaforma::LinuxX64, "lume-1.4.0-linux-x86_64.tar.gz"),
             (Piattaforma::MacosX64, "lume-1.4.0-macos-x86_64.tar.gz"),
+            (
+                Piattaforma::WindowsX64,
+                "lume-1.4.0-windows-x86_64-98a97400c8b1.zip",
+            ),
         ] {
             let corpo = format!(r#"{{"tag_name":"v1.4.0","assets":[{{"name":"{nome}"}}]}}"#);
             let esito = confronta_per(&corpo, v(1, 3, 9), piattaforma).unwrap();
             assert!(matches!(
                 esito,
-                Esito::Disponibile { pacchetto: Some(uscita), .. } if uscita == nome
+                Esito::Disponibile { pacchetto: Some(Pacchetto { nome: uscita, .. }), .. }
+                    if uscita == nome
             ));
         }
     }
@@ -456,7 +585,13 @@ mod tests {
         let esito = Esito::Disponibile {
             versione: v(2, 0, 0),
             pagina: "https://example.invalid/r".to_owned(),
-            pacchetto: Some("Lume-Bundle-windows-x86_64.zip".to_owned()),
+            pacchetto: Some(Pacchetto {
+                nome: "lume-2.0.0-windows-x86_64-0123456789ab.zip".to_owned(),
+                url: String::new(),
+                dimensione: 0,
+                checksum_url: None,
+                installabile: true,
+            }),
             piattaforma: "Windows x86_64",
         };
         let testo = esito.messaggio();

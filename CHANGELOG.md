@@ -7,7 +7,32 @@ in alpha e qualificata su Linux.
 
 ## [Non rilasciato]
 
-Nessuna modifica dopo la 0.4.0.
+Nessuna modifica dopo la 0.4.1.
+
+## [0.4.1] — 2026-11-06
+
+Correzioni sulla 0.4.0 per Windows e Linux; limiti noti invariati, vedi le
+[note di rilascio](docs/note-di-rilascio-0.4.1.md).
+
+### Aggiunto
+- «Aiuto → Scarica aggiornamento…»: controlla la release più recente e, se
+  è nuova, scarica lo zip (Windows) o il `.tar.gz` (Linux) nella cartella
+  Download (o nella home, se il sistema non ne indica una), ne verifica dimensione e sha256 e mostra il percorso. Lume non
+  estrae il pacchetto e non sostituisce sé stesso: l'estrazione resta un
+  gesto dell'utente.
+
+### Corretto
+- Su Windows `lume.exe` parte anche senza «Visual C++ Redistributable»: il
+  runtime C è incluso nell'eseguibile (prima: errore `VCRUNTIME140.dll` non
+  trovato).
+- «Controlla aggiornamenti…» riconosce i pacchetti con il nome con cui sono
+  pubblicati (`lume-<versione>-<piattaforma>-<sha>.zip`/`.tar.gz`); prima
+  su Windows e Linux non li trovava mai.
+- Scroll dell'editor: le righe visibili si disegnano in un solo livello
+  invece di uno per riga, e i colori della sintassi vengono chiesti prima che
+  lo scroll esca dalla parte già colorata. Misurato su Linux: meno CPU per
+  frame con il renderer software. Lo sfarfallio durante lo scroll veloce su
+  Windows non è ancora riprodotto né dichiarato risolto.
 
 ## [0.4.0] — 2026-11-05
 

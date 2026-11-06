@@ -3770,8 +3770,9 @@ dependencies = [
 
 [[package]]
 name = "lume-app"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
+ "directories",
  "futures",
  "iced",
  "iced_runtime",
@@ -3810,7 +3811,7 @@ dependencies = [
 
 [[package]]
 name = "lume-core"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "dunce",
  "grep-matcher",
@@ -3829,7 +3830,7 @@ dependencies = [
 
 [[package]]
 name = "lume-git"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "gix",
  "libc",
@@ -3842,7 +3843,7 @@ dependencies = [
 
 [[package]]
 name = "lume-icons"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "junction",
  "roxmltree 0.21.1",
@@ -3855,7 +3856,7 @@ dependencies = [
 
 [[package]]
 name = "lume-jj"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "libc",
  "lume-testkit",
@@ -3868,7 +3869,7 @@ dependencies = [
 
 [[package]]
 name = "lume-language-servers"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "flate2",
  "lume-lsp",
@@ -3887,7 +3888,7 @@ dependencies = [
 
 [[package]]
 name = "lume-lsp"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "futures",
  "libc",
@@ -3906,7 +3907,7 @@ dependencies = [
 
 [[package]]
 name = "lume-mcp"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "getrandom 0.4.3",
  "gix",
@@ -3925,7 +3926,7 @@ dependencies = [
 
 [[package]]
 name = "lume-notes"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "lume-core",
  "serde",
@@ -3936,7 +3937,7 @@ dependencies = [
 
 [[package]]
 name = "lume-sql"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "apple-native-keyring-store",
  "dbus-secret-service-keyring-store",
@@ -3956,7 +3957,7 @@ dependencies = [
 
 [[package]]
 name = "lume-store"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "directories",
  "futures",
@@ -3969,7 +3970,7 @@ dependencies = [
 
 [[package]]
 name = "lume-syntax"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "ropey",
  "streaming-iterator",
@@ -3996,7 +3997,7 @@ dependencies = [
 
 [[package]]
 name = "lume-terminal"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "alacritty_terminal",
  "futures",
@@ -4007,14 +4008,14 @@ dependencies = [
 
 [[package]]
 name = "lume-testkit"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "tempfile",
 ]
 
 [[package]]
 name = "lume-theme"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "iced",
  "serde",
@@ -4023,13 +4024,14 @@ dependencies = [
 
 [[package]]
 name = "lume-trust"
-version = "0.4.0"
+version = "0.4.1"
 
 [[package]]
 name = "lume-ui"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "iced",
+ "iced_tiny_skia",
  "lume-core",
  "lume-icons",
  "lume-notes",

@@ -123,6 +123,10 @@ fn ranges_touching_line(
 const OVERDRAW: usize = 2;
 /// Righe oltre il visibile mantenute in cache prima dell'eviction.
 const CACHE_KEEP: usize = 100;
+/// Margine oltre il visibile che deve già avere i token di sintassi: la
+/// richiesta parte prima che lo scroll esca dalla finestra colorata, così
+/// le righe nuove non vengono prima preparate senza colori e poi rifatte.
+const SYNTAX_PREFETCH: usize = CACHE_KEEP / 2;
 
 /// Vista editor: disegna un `Document` e pubblica `EditorCommand`.
 /// Un testo monoriga nel font del codice, per popup e scheda.
@@ -268,7 +272,8 @@ impl<'a, M> EditorView<'a, M> {
                 rope.len_bytes()
             }
         };
-        let visible = rope.line_to_byte(first)..end(last);
+        let visible = rope.line_to_byte(first.saturating_sub(SYNTAX_PREFETCH))
+            ..end(last.saturating_add(SYNTAX_PREFETCH).min(count - 1));
         let version = self.doc.version();
         if self
             .snapshot
@@ -658,6 +663,8 @@ impl<'a, M> EditorView<'a, M> {
     /// Costruisce l'entry di cache della riga: paragraph (monospace, no
     /// wrapping), testo e token incorporati.
     fn build_line(&self, state: &EditorState, line: usize) -> CachedLine {
+        #[cfg(feature = "performance-diagnostics")]
+        let _phase = crate::performance_diagnostics::Span::new("editor.build_line");
         let text = self.line_text(line);
         let tokens = self.line_tokens(state, line, &text);
         let spans = self.spans_from_tokens(&text, &tokens);
@@ -1389,25 +1396,30 @@ impl<'a, M> Widget<M, iced::Theme, iced::Renderer> for EditorView<'a, M> {
             }
 
             let mut cursore_highlight = 0usize;
-            let mut margine: Vec<RigaMargine> = Vec::new();
-            for vis_line in first_vis..=last_vis {
-                let line = proj.visual_to_doc(vis_line, n_lines);
-                let y = vis_y(vis_line);
-                let line_slice = rope.line(line);
-                let mut content_len = line_slice.len_chars();
-                if content_len > 0 && line_slice.char(content_len - 1) == '\n' {
-                    content_len -= 1;
-                }
-                let visual_width =
-                    display_columns(line_slice.chars().take(content_len)) as f32 * FONT_SIZE * 0.65;
-                state
-                    .content_width
-                    .set(state.content_width.get().max(visual_width));
-                let line_start = rope.line_to_char(line);
-                let line_content_end = line_start + content_len;
+            // Un solo layer per il testo di tutte le righe visibili: un layer
+            // per riga costava a wgpu una preparazione e un passo di disegno
+            // del testo per riga (~50 a frame). Le righe non si sovrappongono
+            // e dentro un layer i quad restano sotto il testo, come prima.
+            let mut righe_visibili = Vec::with_capacity((last_vis + 1).saturating_sub(first_vis));
+            renderer.with_layer(text_bounds, |renderer| {
+                for vis_line in first_vis..=last_vis {
+                    let line = proj.visual_to_doc(vis_line, n_lines);
+                    let y = vis_y(vis_line);
+                    let line_slice = rope.line(line);
+                    let mut content_len = line_slice.len_chars();
+                    if content_len > 0 && line_slice.char(content_len - 1) == '\n' {
+                        content_len -= 1;
+                    }
+                    let visual_width = display_columns(line_slice.chars().take(content_len)) as f32
+                        * FONT_SIZE
+                        * 0.65;
+                    state
+                        .content_width
+                        .set(state.content_width.get().max(visual_width));
+                    let line_start = rope.line_to_char(line);
+                    let line_content_end = line_start + content_len;
 
-                let segni = marks_on_line(self.overlay.marks, line_start, line_content_end);
-                renderer.with_layer(text_bounds, |renderer| {
+                    let segni = marks_on_line(self.overlay.marks, line_start, line_content_end);
                     // Evidenziazione dei match di Trova (Ctrl+F): sotto la
                     // selezione, cosicché il match corrente — che dopo un salto
                     // COINCIDE con la selezione — resti quello più in vista.
@@ -1527,7 +1539,12 @@ impl<'a, M> Widget<M, iced::Theme, iced::Renderer> for EditorView<'a, M> {
                             segno.severity.color(self.theme),
                         );
                     }
-                });
+                    righe_visibili.push((line, y, segni));
+                }
+            });
+
+            let mut margine: Vec<RigaMargine> = Vec::with_capacity(righe_visibili.len());
+            for (line, y, segni) in righe_visibili {
                 let fold_marker = self
                     .line_is_foldable(line)
                     .then(|| proj.collapsed_count_at(line).is_some());
@@ -2101,6 +2118,88 @@ mod tests {
         let mut shell = iced::advanced::Shell::new(&mut messages);
         ready.request_syntax_viewport(&state, bounds, &mut shell);
         assert_eq!(messages.len(), 2);
+    }
+
+    #[test]
+    fn draw_con_scroll_oltre_il_contenuto_non_va_in_panic() {
+        use iced::advanced::Widget as _;
+        let document = Document::from_str(&"riga\n".repeat(20), None, DocId(86));
+        let theme = LumeTheme::builtin().remove(0);
+        let mut view =
+            EditorView::from_snapshot(&document, None, &theme, &[], |_| (0u64, 0usize..0usize));
+        let mut tree = iced::advanced::widget::Tree::new(
+            &view
+                as &dyn iced::advanced::Widget<
+                    (u64, std::ops::Range<usize>),
+                    iced::Theme,
+                    iced::Renderer,
+                >,
+        );
+        let mut renderer = iced::Renderer::Secondary(iced_tiny_skia::Renderer::new(
+            iced::Font::default(),
+            iced::Pixels(16.0),
+        ));
+        let limits =
+            iced::advanced::layout::Limits::new(iced::Size::ZERO, iced::Size::new(800.0, 600.0));
+        let node = view.layout(&mut tree, &renderer, &limits);
+        view.draw(
+            &tree,
+            &mut renderer,
+            &iced::Theme::Dark,
+            &iced::advanced::renderer::Style::default(),
+            iced::advanced::Layout::new(&node),
+            iced::mouse::Cursor::Unavailable,
+            &Rectangle::new(iced::Point::ORIGIN, iced::Size::new(800.0, 600.0)),
+        );
+        // Scroll rimasto oltre la fine senza un cambio che lo riporti nei
+        // limiti: il secondo disegno trova first_vis > last_vis.
+        tree.state
+            .downcast_ref::<EditorState>()
+            .scroll_y
+            .set(10_000.0 * super::LINE_H);
+        view.draw(
+            &tree,
+            &mut renderer,
+            &iced::Theme::Dark,
+            &iced::advanced::renderer::Style::default(),
+            iced::advanced::Layout::new(&node),
+            iced::mouse::Cursor::Unavailable,
+            &Rectangle::new(iced::Point::ORIGIN, iced::Size::new(800.0, 600.0)),
+        );
+    }
+
+    #[test]
+    fn syntax_viewport_is_requested_before_scroll_leaves_the_window() {
+        let document = Document::from_str(&"fn main() {}\n".repeat(500), None, DocId(85));
+        let theme = LumeTheme::builtin().remove(0);
+        let state = EditorState::default();
+        let bounds = Rectangle::new((0.0, 0.0).into(), (800.0, 100.0).into());
+        let view = EditorView::from_snapshot(&document, None, &theme, &[], |_| (0, 0..0))
+            .on_syntax_viewport(|version, range| (version, range));
+        let mut messages = Vec::new();
+        {
+            let mut shell = iced::advanced::Shell::new(&mut messages);
+            view.request_syntax_viewport(&state, bounds, &mut shell);
+        }
+        let rope = document.rope();
+        let first_end = messages[0].1.end;
+        // Visibile ancora dentro la finestra richiesta, ma a meno di
+        // SYNTAX_PREFETCH righe dal suo bordo: la richiesta parte già ora.
+        let edge_line = rope.byte_to_line(first_end);
+        let last_visible = edge_line - super::SYNTAX_PREFETCH / 2;
+        state
+            .scroll_y
+            .set((last_visible as f32 - 6.0) * super::LINE_H);
+        {
+            let mut shell = iced::advanced::Shell::new(&mut messages);
+            view.request_syntax_viewport(&state, bounds, &mut shell);
+        }
+        assert_eq!(messages.len(), 2, "richiesta anticipata vicino al bordo");
+        let ahead = rope.line_to_byte(last_visible + super::SYNTAX_PREFETCH);
+        assert!(
+            messages[1].1.end > ahead,
+            "la nuova finestra copre il margine"
+        );
     }
 
     #[test]

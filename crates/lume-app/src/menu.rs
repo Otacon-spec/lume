@@ -106,6 +106,9 @@ pub enum MenuAct {
     /// Chiede a GitHub se c'e' una versione piu' recente. Solo su richiesta:
     /// il budget vieta lavoro da inattivo, quindi niente controllo periodico.
     CheckUpdates,
+    /// Controlla e, se c'è una versione nuova, scarica e verifica lo zip
+    /// ufficiale nella cartella Download. Non estrae e non si sostituisce.
+    DownloadUpdate,
     /// Versione, licenza e repository in una notifica: è quel che serve a chi
     /// apre una segnalazione, e senza rete.
     About,
@@ -521,6 +524,7 @@ pub const MENUS: [MenuDef; 6] = [
         items: &[
             Item::act("Scorciatoie…", "", MenuAct::Shortcuts, false),
             Item::act("Controlla aggiornamenti…", "", MenuAct::CheckUpdates, false),
+            Item::act("Scarica aggiornamento…", "", MenuAct::DownloadUpdate, false),
             Item::act("Informazioni su Lume", "", MenuAct::About, false),
         ],
     },

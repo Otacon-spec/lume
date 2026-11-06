@@ -172,7 +172,8 @@ impl Message {
             | Self::SearchCollected(..)
             | Self::SearchDebounced(..)
             | Self::NoticeExpired(_)
-            | Self::UpdateChecked(_) => (Asincrono, Nessuna),
+            | Self::UpdateChecked(_)
+            | Self::UpdateDownloaded(_) => (Asincrono, Nessuna),
             Self::SearchExitReady(..) | Self::FileReadFinished(..) => (Asincrono, NelGestore),
             Self::RestoredTabReadFinished(..)
             | Self::DocRicaricato(..)

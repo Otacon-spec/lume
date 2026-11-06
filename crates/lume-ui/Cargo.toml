@@ -21,6 +21,10 @@ unicode-segmentation = { workspace = true }
 unicode-width = { workspace = true }
 zeroize = { workspace = true }
 
+[dev-dependencies]
+# Renderer software reale per i test che chiamano draw() dell'editor.
+iced_tiny_skia = "=0.14.0"
+
 [features]
 performance-diagnostics = []
 

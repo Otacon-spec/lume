@@ -65,6 +65,11 @@ function Assert-Nuovo([string]$percorso) {
 $cargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $HOME ".cargo" }
 $rustupHome = if ($env:RUSTUP_HOME) { $env:RUSTUP_HOME } else { Join-Path $HOME ".rustup" }
 $flags = @(
+    # Runtime C statico: senza, lume.exe importa VCRUNTIME140.dll e su un
+    # Windows privo del «Visual C++ Redistributable» non parte (0xC0000135,
+    # visto sulla 0.4.0 in una VM Windows 11 pulita). Il crate cc legge la
+    # stessa target-feature e compila il C (aws-lc-sys) con /MT.
+    "-Ctarget-feature=+crt-static",
     "--remap-path-prefix=$cargoHome=/cargo",
     "--remap-path-prefix=$rustupHome=/rustup",
     "--remap-path-prefix=$repositoryRoot=/lume"
@@ -90,6 +95,13 @@ try {
     # default, verrebbe unificata anche nella build dell'exe.
     cargo build --release --locked -p lume-app
     if ($LASTEXITCODE -ne 0) { throw "build di release fallita" }
+
+    # Il nome della DLL sta in chiaro nella tabella degli import.
+    $importati = [System.Text.Encoding]::GetEncoding(28591).GetString([System.IO.File]::ReadAllBytes($exe))
+    if ($importati -match '(?i)vcruntime140[_0-9]*\.dll') {
+        throw "lume.exe dipende ancora da $($Matches[0]): manca il runtime C statico"
+    }
+    Write-Output "lume.exe non importa VCRUNTIME140: runtime C statico"
 
     $utente = $env:USERNAME
     if ($utente -and $utente.Length -ge 4) {
