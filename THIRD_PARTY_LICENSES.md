@@ -2662,7 +2662,7 @@ TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
 PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ```
 
@@ -2799,7 +2799,7 @@ For these and/or other purposes and motivations, and without any expectation of 
 
      c. Affirmer disclaims responsibility for clearing rights of other persons that may apply to the Work or any use thereof, including without limitation any person's Copyright and Related Rights in the Work. Further, Affirmer disclaims responsibility for obtaining any necessary consents, permissions or other rights required for any use of the Work.
 
-     d. Affirmer understands and acknowledges that Creative Commons is not a party to this document and has no duty or obligation with respect to this CC0 or use of the Work. 
+     d. Affirmer understands and acknowledges that Creative Commons is not a party to this document and has no duty or obligation with respect to this CC0 or use of the Work.
 ```
 
 ## Creative Commons Zero v1.0 Universal
@@ -12549,7 +12549,7 @@ Mozilla Public License Version 2.0
     means any form of the work other than Source Code Form.
 
 1.7. "Larger Work"
-    means a work that combines Covered Software with other material, in 
+    means a work that combines Covered Software with other material, in
     a separate file or files, that is not Covered Software.
 
 1.8. "License"
@@ -13017,7 +13017,7 @@ Usata da:
 - [zlib-rs 0.6.6](https://github.com/trifectatechfoundation/zlib-rs)
 
 ```text
-(C) 2024 Trifecta Tech Foundation 
+(C) 2024 Trifecta Tech Foundation
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -13211,7 +13211,7 @@ Usata da:
 - [zune-jpeg 0.4.21](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
 
 ```text
-Copyright (c) zune-image developers 
+Copyright (c) zune-image developers
 
 Licensed under the Apache License, Version 2.0
 <LICENSE-APACHE or
