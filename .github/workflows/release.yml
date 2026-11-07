@@ -30,7 +30,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout del commit esatto dell'evento
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'push' && github.ref || github.sha }}
           fetch-depth: 0
@@ -62,7 +62,7 @@ jobs:
         shell: pwsh
         run: ./tools/build_release_bundle.ps1 -OutputDirectory artifacts
       - name: Conserva zip e checksum del run di prova
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lume-bundle-windows-x86_64
           path: |
@@ -70,7 +70,7 @@ jobs:
             artifacts/lume-*-windows-x86_64-*.zip.sha256
             artifacts/lume-*-windows-x86_64-*.zip.MANIFEST.json
       - name: Scarica il pacchetto Linux verificato
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: lume-linux-x86_64
           path: artifacts
