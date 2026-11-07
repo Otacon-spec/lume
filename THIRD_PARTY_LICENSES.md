@@ -4657,8 +4657,8 @@ DEALINGS IN THE SOFTWARE.
 
 Usata da:
 
-- [libsqlite3-sys 0.37.0](https://github.com/rusqlite/rusqlite)
-- [rusqlite 0.39.0](https://github.com/rusqlite/rusqlite)
+- [libsqlite3-sys 0.39.1](https://github.com/rusqlite/rusqlite)
+- [rusqlite 0.41.1](https://github.com/rusqlite/rusqlite)
 
 ```text
 Copyright (c) 2014 The rusqlite developers
@@ -10690,7 +10690,7 @@ Usata da:
 - [rustc-hash 1.1.0](https://github.com/rust-lang-nursery/rustc-hash)
 - [rustix-openpty 0.2.0](https://github.com/sunfishcode/rustix-openpty)
 - [rustix 0.38.44](https://github.com/bytecodealliance/rustix)
-- [rustix 1.1.4](https://github.com/bytecodealliance/rustix)
+- [rustix 1.1.6](https://github.com/bytecodealliance/rustix)
 - [rustversion 1.0.23](https://github.com/dtolnay/rustversion)
 - [serde 1.0.228](https://github.com/serde-rs/serde)
 - [serde_core 1.0.228](https://github.com/serde-rs/serde)
@@ -11543,7 +11543,7 @@ SOFTWARE.
 Usata da:
 
 - [roxmltree 0.20.0](https://github.com/RazrFalcon/roxmltree)
-- [roxmltree 0.21.1](https://github.com/RazrFalcon/roxmltree)
+- [roxmltree 0.21.2](https://github.com/RazrFalcon/roxmltree)
 
 ```text
 The MIT License (MIT)
@@ -12119,7 +12119,7 @@ SOFTWARE.
 
 Usata da:
 
-- [hashlink 0.11.1](https://github.com/djc/hashlink)
+- [hashlink 0.12.2](https://github.com/djc/hashlink)
 
 ```text
 This work is derived in part from the `linked-hash-map` crate, Copyright (c)
