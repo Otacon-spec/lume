@@ -12,8 +12,8 @@ avvisi; consultare README e metadati del pacchetto per il contenuto effettivo.
 
 ## Riepilogo
 
-- MIT License (539 crate)
-- zlib License (23 crate)
+- MIT License (540 crate)
+- zlib License (24 crate)
 - Apache License 2.0 (21 crate)
 - Unicode License v3 (19 crate)
 - ISC License (7 crate)
@@ -2662,7 +2662,7 @@ TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
 PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
 ```
 
@@ -2799,7 +2799,7 @@ For these and/or other purposes and motivations, and without any expectation of 
 
      c. Affirmer disclaims responsibility for clearing rights of other persons that may apply to the Work or any use thereof, including without limitation any person's Copyright and Related Rights in the Work. Further, Affirmer disclaims responsibility for obtaining any necessary consents, permissions or other rights required for any use of the Work.
 
-     d. Affirmer understands and acknowledges that Creative Commons is not a party to this document and has no duty or obligation with respect to this CC0 or use of the Work.
+     d. Affirmer understands and acknowledges that Creative Commons is not a party to this document and has no duty or obligation with respect to this CC0 or use of the Work. 
 ```
 
 ## Creative Commons Zero v1.0 Universal
@@ -4745,7 +4745,7 @@ IN THE SOFTWARE.
 
 Usata da:
 
-- [flate2 1.1.9](https://github.com/rust-lang/flate2-rs)
+- [flate2 1.1.10](https://github.com/rust-lang/flate2-rs)
 
 ```text
 Copyright (c) 2014-2026 Alex Crichton
@@ -5855,7 +5855,7 @@ DEALINGS IN THE SOFTWARE.
 
 Usata da:
 
-- [reqwest 0.13.4](https://github.com/seanmonstar/reqwest)
+- [reqwest 0.13.5](https://github.com/seanmonstar/reqwest)
 
 ```text
 Copyright (c) 2016-2026 Sean McArthur
@@ -11127,7 +11127,7 @@ Usata da:
 - [grep-matcher 0.1.9](https://github.com/BurntSushi/ripgrep/tree/master/crates/matcher)
 - [grep-regex 0.1.14](https://github.com/BurntSushi/ripgrep/tree/master/crates/regex)
 - [grep-searcher 0.1.17](https://github.com/BurntSushi/ripgrep/tree/master/crates/searcher)
-- [ignore 0.4.29](https://github.com/BurntSushi/ripgrep/tree/master/crates/ignore)
+- [ignore 0.4.32](https://github.com/BurntSushi/ripgrep/tree/master/crates/ignore)
 - [jiff-tzdb-platform 0.1.3](https://github.com/BurntSushi/jiff)
 - [jiff-tzdb 0.1.8](https://github.com/BurntSushi/jiff)
 - [jiff 0.2.32](https://github.com/BurntSushi/jiff)
@@ -11863,6 +11863,37 @@ SOFTWARE.
 
 Usata da:
 
+- [base64 0.23.1](https://github.com/marshallpierce/rust-base64)
+
+```text
+The MIT License (MIT)
+
+Copyright (c) 2025 Alice Maz, Marshall Pierce
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+```
+
+## MIT License
+
+Usata da:
+
 - [rustybuzz 0.20.1](https://github.com/harfbuzz/rustybuzz)
 
 ```text
@@ -12518,7 +12549,7 @@ Mozilla Public License Version 2.0
     means any form of the work other than Source Code Form.
 
 1.7. "Larger Work"
-    means a work that combines Covered Software with other material, in
+    means a work that combines Covered Software with other material, in 
     a separate file or files, that is not Covered Software.
 
 1.8. "License"
@@ -12986,7 +13017,7 @@ Usata da:
 - [zlib-rs 0.6.6](https://github.com/trifectatechfoundation/zlib-rs)
 
 ```text
-(C) 2024 Trifecta Tech Foundation
+(C) 2024 Trifecta Tech Foundation 
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
@@ -13180,7 +13211,7 @@ Usata da:
 - [zune-jpeg 0.4.21](https://github.com/etemesi254/zune-image/tree/dev/crates/zune-jpeg)
 
 ```text
-Copyright (c) zune-image developers
+Copyright (c) zune-image developers 
 
 Licensed under the Apache License, Version 2.0
 <LICENSE-APACHE or
@@ -13196,6 +13227,7 @@ according to those terms
 Usata da:
 
 - [miniz_oxide 0.8.9](https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide)
+- [miniz_oxide 0.9.1](https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide)
 
 ```text
 Copyright 2013-2014 RAD Game Tools and Valve Software
