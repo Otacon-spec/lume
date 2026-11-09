@@ -4050,7 +4050,8 @@ fn starts_without_sample_project_or_mock_tools() {
             tools::problems::ID,
             tools::ext::ID,
             tools::usages::ID,
-            tools::jj::ID
+            tools::jj::ID,
+            tools::debug::ID
         ]
     );
     assert_eq!(
@@ -4059,9 +4060,12 @@ fn starts_without_sample_project_or_mock_tools() {
             tools::bookmarks::ID,
             tools::history::ID,
             tools::notes::ID,
-            tools::structure::ID
+            tools::structure::ID,
+            tools::maven::ID
         ]
     );
+    // Senza pom.xml il pannello Maven è registrato ma non disponibile.
+    assert!(!app.registry.is_available(tools::maven::ID));
     assert!(app.notes.is_none());
     assert_eq!(app.registry.active_dock, Some(tools::terminal::ID));
     assert_eq!(app.registry.dock_height, lume_ui::tool::DOCK_HEIGHT_RANGE.1);
@@ -5049,7 +5053,8 @@ fn restore_snapshot_reopens_existing_files_and_layout() {
             tools::problems::ID,
             tools::ext::ID,
             tools::usages::ID,
-            tools::jj::ID
+            tools::jj::ID,
+            tools::debug::ID
         ]
     );
     assert_eq!(app.registry.active_panel, Some(tools::search_tool::ID));

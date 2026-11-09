@@ -41,6 +41,20 @@ pub enum MenuAct {
     Exit,
     /// Segnalibro sulla riga corrente (F11)
     ToggleBookmark,
+    /// Pannello Debug (piano 17).
+    DebugPanel,
+    /// Finestra «Configurazioni di esecuzione».
+    RunConfigurations,
+    /// Breakpoint sulla riga corrente (F9).
+    DebugToggleBreakpoint,
+    /// Avvia la configurazione scelta o continua (F5).
+    DebugContinue,
+    /// Passo sopra (F10).
+    DebugStepOver,
+    DebugStepIn,
+    DebugStepOut,
+    /// Ferma la sessione (Maiusc+F5).
+    DebugStop,
     /// Mostra/nasconde il dock Terminale (Alt+F12)
     ToggleTerminal,
     /// Mostra o nasconde gli autori delle righe nell'editor.
@@ -512,12 +526,42 @@ pub const MENUS: [MenuDef; 6] = [
     },
     MenuDef {
         name: "Esegui",
-        items: &[Item::act(
-            "Forge · configurazioni…",
-            "",
-            MenuAct::Forge,
-            false,
-        )],
+        items: &[
+            Item::act("Forge · configurazioni…", "", MenuAct::Forge, false),
+            Item::separator(),
+            Item::of(
+                "Configurazioni di esecuzione…",
+                "",
+                MenuAct::RunConfigurations,
+                false,
+                "debugger",
+            ),
+            Item::of("Debug…", "", MenuAct::DebugPanel, false, "debugger"),
+            Item::of(
+                "Avvia o continua",
+                "F5",
+                MenuAct::DebugContinue,
+                false,
+                "debugger",
+            ),
+            Item::of("Passo", "F10", MenuAct::DebugStepOver, false, "debugger"),
+            Item::of("Entra", "", MenuAct::DebugStepIn, false, "debugger"),
+            Item::of("Esci", "", MenuAct::DebugStepOut, false, "debugger"),
+            Item::of(
+                "Ferma il debug",
+                "Maiusc+F5",
+                MenuAct::DebugStop,
+                false,
+                "debugger",
+            ),
+            Item::of(
+                "Alterna breakpoint",
+                "F9",
+                MenuAct::DebugToggleBreakpoint,
+                false,
+                "debugger",
+            ),
+        ],
     },
     MenuDef {
         name: "Aiuto",

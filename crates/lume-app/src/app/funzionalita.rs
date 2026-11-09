@@ -108,6 +108,8 @@ impl Lume {
             // tool, e per Problemi quello è **il numero di problemi**. Un
             // server fermo con tre diagnostiche vecchie risulterebbe vivo.
             Feature::LanguageServer => Some(usize::from(self.lsp.any_live())),
+            // La sessione, non le viste: deriva dal possessore (design §2).
+            Feature::Debugger => Some(usize::from(self.debug.is_live())),
             #[cfg(feature = "mcp")]
             Feature::Mcp => Some(usize::from(self.mcp.is_some())),
             #[cfg(feature = "sql")]
@@ -210,8 +212,11 @@ impl Lume {
 
     /// Fermare questa funzionalità butterebbe via un processo vivo?
     pub(super) fn feature_needs_confirmation(&self, feature: crate::features::Feature) -> bool {
-        feature == crate::features::Feature::Terminal
-            && self.feature_live_count(feature).unwrap_or(0) > 0
+        // Fermare il debugger termina il programma dell'utente.
+        matches!(
+            feature,
+            crate::features::Feature::Terminal | crate::features::Feature::Debugger
+        ) && self.feature_live_count(feature).unwrap_or(0) > 0
     }
 
     pub(super) fn stop_feature(&mut self, feature: crate::features::Feature) -> Task<Message> {
@@ -243,6 +248,7 @@ impl Lume {
             // dire ri-indicizzare — un timeout renderebbe il fermo peggiore
             // del non fermare.
             Feature::LanguageServer => self.stop_lsp(),
+            Feature::Debugger => self.stop_debug(),
             #[cfg(feature = "mcp")]
             Feature::Mcp => {
                 self.mcp_shutdown_cards();

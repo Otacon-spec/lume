@@ -113,6 +113,15 @@ impl Lume {
                 .fold_projections
                 .get(&id)
                 .map_or(&[], lume_ui::editor::FoldProjection::spans);
+            let debug_marks = doc
+                .path()
+                .and_then(|path| self.debug.editor_marks.get(path));
+            let debug = lume_ui::editor::DebugMarks {
+                breakpoints: debug_marks.map_or(&[], |marks| marks.breakpoints.as_slice()),
+                current_line: debug_marks.and_then(|marks| marks.current_line),
+                executed: debug_marks.map_or(&[], |marks| marks.executed.as_slice()),
+                clickable: doc.path().is_some() && self.debug_gutter_enabled(),
+            };
             let overlay = EditorOverlay {
                 marks,
                 blame,
@@ -128,6 +137,7 @@ impl Lume {
                     .is_some_and(crate::lsp_mode::LspWorkspace::can_hover),
                 note_ranges,
                 fold_spans,
+                debug,
             };
             let lane = match group {
                 crate::editor_groups::GroupId::Primary => lume_syntax::SyntaxLane::Primary,

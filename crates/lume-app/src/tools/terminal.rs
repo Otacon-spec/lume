@@ -31,6 +31,8 @@ pub enum Event {
     /// residuo di una sessione già chiusa (`Notify` conserva un permesso).
     Tick,
     NewSession,
+    /// Esegue un comando in una scheda nuova (widget «Esegui»).
+    Run(RunSpec),
     Select(u64),
     Close(u64),
     Kill(u64),
@@ -56,8 +58,20 @@ pub enum Event {
     OpenHyperlink(TerminalPoint),
 }
 
+/// Un comando da eseguire in una scheda propria (widget «Esegui», piano 17).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RunSpec {
+    pub label: String,
+    pub program: std::path::PathBuf,
+    pub args: Vec<String>,
+    pub cwd: std::path::PathBuf,
+    pub env: Vec<(String, String)>,
+}
+
 struct SessionState {
     id: u64,
+    /// `Some` per una scheda di esecuzione: etichetta e Riavvia la usano.
+    run: Option<RunSpec>,
     terminal: Option<TerminalSession>,
     exit_code: Option<u32>,
     stopped: bool,
@@ -72,9 +86,30 @@ impl SessionState {
         wakeup: Option<lume_terminal::Wakeup>,
         scrollback: usize,
     ) -> Self {
-        let spawned = match shell.command() {
-            None => TerminalSession::spawn_default_in_with_wakeup(DEFAULT_SIZE, cwd, wakeup),
-            Some((program, args)) => TerminalSession::spawn_command_in_with_wakeup(
+        Self::spawn_with(id, shell, None, cwd, wakeup, scrollback)
+    }
+
+    fn spawn_with(
+        id: u64,
+        shell: &ShellSpec,
+        run: Option<RunSpec>,
+        cwd: Option<&std::path::Path>,
+        wakeup: Option<lume_terminal::Wakeup>,
+        scrollback: usize,
+    ) -> Self {
+        let spawned = match (&run, shell.command()) {
+            (Some(run), _) => TerminalSession::spawn_program_with_wakeup(
+                &run.program,
+                &run.args,
+                &run.env,
+                DEFAULT_SIZE,
+                &run.cwd,
+                wakeup,
+            ),
+            (None, None) => {
+                TerminalSession::spawn_default_in_with_wakeup(DEFAULT_SIZE, cwd, wakeup)
+            }
+            (None, Some((program, args))) => TerminalSession::spawn_command_in_with_wakeup(
                 &program,
                 &args,
                 DEFAULT_SIZE,
@@ -93,6 +128,7 @@ impl SessionState {
                     .map(|error| error.to_string());
                 Self {
                     id,
+                    run,
                     terminal: Some(terminal),
                     exit_code: None,
                     error,
@@ -101,6 +137,7 @@ impl SessionState {
             }
             Err(error) => Self {
                 id,
+                run,
                 terminal: None,
                 exit_code: None,
                 error: Some(error.to_string()),
@@ -225,6 +262,22 @@ impl TerminalTool {
         id
     }
 
+    /// Nuova scheda che esegue `run`; restituisce il suo id.
+    fn spawn_run(&mut self, run: RunSpec) -> u64 {
+        let id = self.next_id;
+        self.next_id += 1;
+        self.sessions.push(SessionState::spawn_with(
+            id,
+            &self.shell,
+            Some(run),
+            self.cwd.as_deref(),
+            self.wakeup(),
+            self.scrollback,
+        ));
+        self.active = Some(id);
+        id
+    }
+
     fn remove_session(&mut self, id: u64) {
         self.sessions.retain(|session| session.id != id);
         if self.active == Some(id) {
@@ -275,9 +328,11 @@ impl TerminalTool {
     #[allow(clippy::indexing_slicing)] // position viene da iter().position() sullo stesso Vec
     fn restart_session(&mut self, id: u64) {
         if let Some(position) = self.sessions.iter().position(|session| session.id == id) {
-            self.sessions[position] = SessionState::spawn(
+            let run = self.sessions[position].run.clone();
+            self.sessions[position] = SessionState::spawn_with(
                 id,
                 &self.shell,
+                run,
                 self.cwd.as_deref(),
                 self.wakeup(),
                 self.scrollback,
@@ -402,10 +457,14 @@ impl Tool for TerminalTool {
         .spacing(4)
         .align_y(Alignment::Center);
         for session in &self.sessions {
+            let nome = session.run.as_ref().map_or_else(
+                || format!("Terminale {}", session.id),
+                |run| format!("▶ {}", run.label),
+            );
             let label = if self.active == Some(session.id) {
-                format!("Terminale {} ●", session.id)
+                format!("{nome} ●")
             } else {
-                format!("Terminale {}", session.id)
+                nome
             };
             tabs = tabs.push(
                 button(text(label).size(11).color(t.ui))
@@ -493,6 +552,9 @@ impl Tool for TerminalTool {
             Event::Tick => self.drain_events(),
             Event::NewSession => {
                 self.spawn_session();
+            }
+            Event::Run(run) => {
+                self.spawn_run(run.clone());
             }
             Event::Select(id) => {
                 if self.sessions.iter().any(|session| session.id == *id) {

@@ -95,4 +95,9 @@ pub enum EditorCommand {
     FoldClicked {
         line: usize,
     },
+    /// Clic sul numero della riga `line` (0-based) con il debugger acceso:
+    /// alterna un punto di interruzione.
+    BreakpointClicked {
+        line: usize,
+    },
 }

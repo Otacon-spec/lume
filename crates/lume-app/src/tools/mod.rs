@@ -4,11 +4,13 @@
 pub mod bookmarks;
 #[cfg(feature = "sql")]
 pub mod db;
+pub mod debug;
 pub mod ext;
 pub mod git_native;
 pub mod gitlog;
 pub mod history;
 pub mod jj;
+pub mod maven;
 pub mod notes;
 pub mod problems;
 pub mod project;
@@ -36,6 +38,8 @@ pub fn persisted_id(value: &str) -> Option<ToolId> {
         "structure" => Some(structure::ID),
         "usages" => Some(usages::ID),
         "jj" => Some(jj::ID),
+        "debug" => Some(debug::ID),
+        "maven" => Some(maven::ID),
         _ => None,
     }
 }
@@ -56,10 +60,14 @@ pub fn default_registry() -> (Registry, std::sync::Arc<tokio::sync::Notify>) {
     r.register(Box::new(usages::UsagesTool::new()), Side::Left);
     r.register(Box::new(jj::JjTool::new()), Side::Left);
     let _ = r.set_unavailable(jj::ID, true);
+    r.register(Box::new(debug::DebugTool::new()), Side::Left);
     r.register(Box::new(bookmarks::BookmarksTool::new()), Side::Right);
     r.register(Box::new(history::HistoryTool::new()), Side::Right);
     r.register(Box::new(notes::NotesTool::new()), Side::Right);
     r.register(Box::new(structure::StructureTool::new()), Side::Right);
+    // Compare solo con un pom.xml nella radice (`sync_maven_tool`).
+    r.register(Box::new(maven::MavenTool::new()), Side::Right);
+    let _ = r.set_unavailable(maven::ID, true);
     (r, terminal_wakeup)
 }
 

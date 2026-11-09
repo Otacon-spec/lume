@@ -350,6 +350,10 @@ pub struct Lume {
     /// Lo stato **freddo** del language server: la sessione vive nell'attore,
     /// dentro la subscription. Qui c'è solo quel che l'app sa.
     pub lsp: crate::lsp_set::LspSet,
+    /// Il debugger: stato freddo; la sessione vive nella subscription.
+    pub(crate) debug: crate::debug_mode::DebugController,
+    /// La finestra «Configurazioni di esecuzione», quando è aperta.
+    pub(crate) configurazioni_editor: Option<crate::configurazioni_panel::Editor>,
     /// Il server MCP, se acceso. `None` = nessuna pipe o subscription.
     #[cfg(feature = "mcp")]
     mcp: Option<crate::mcp_mode::McpWorkspace>,
@@ -1065,6 +1069,18 @@ pub enum Message {
     LspInstallProgress(String, u64, lume_language_servers::InstallProgress),
     /// Qualcosa dallo stream del language server, con la sua generazione.
     Lsp(String, u64, crate::lsp_mode::LspEvent),
+    /// Dallo stream della sessione di debug, con la sua generazione.
+    Debug(u64, crate::debug_mode::DebugEvent),
+    /// Un gesto nella finestra «Configurazioni di esecuzione».
+    Configurazioni(crate::configurazioni_panel::Messaggio),
+    /// `.lume/launch.toml` scritto (o no) per la radice data.
+    ConfigurazioniSalvate(PathBuf, Result<(), String>),
+    /// Compilazione di «File corrente» finita (widget «Esegui»).
+    EseguiCompilato(Box<crate::app::esegui::Compilato>),
+    /// `.lume/launch.toml` letto e gdb cercato, per la radice data.
+    DebugSetup(PathBuf, crate::debug_mode::Setup),
+    /// Righe di sorgente di un frame, per la generazione e il frame dati.
+    DebugSnippet(u64, Option<crate::debug_mode::Snippet>, PathBuf, i64),
     /// Evento dallo stream MCP e dalla sua specifica accensione.
     #[cfg(feature = "mcp")]
     Mcp(u64, lume_mcp::McpEvent),
@@ -1436,8 +1452,10 @@ fn leggi_ramo(root: &Path) -> Option<String> {
 mod albero;
 mod albero_elimina;
 mod albero_rinomina;
+mod debug;
 mod editor;
 mod editor_multi;
+pub(crate) mod esegui;
 use editor_multi::{OccurrenceTicket, set_primary};
 mod fs_bridge;
 mod funzionalita;
@@ -1572,6 +1590,7 @@ impl Lume {
             project: self.project_name(),
             branch: self.branch.as_deref(),
             environment: self.environment_picker.label(),
+            run: self.run_widget(),
         }
     }
 
@@ -1704,6 +1723,8 @@ impl Lume {
             #[cfg(feature = "sql")]
             sql: None,
             lsp: crate::lsp_set::LspSet::default(),
+            debug: crate::debug_mode::DebugController::default(),
+            configurazioni_editor: None,
             #[cfg(feature = "mcp")]
             mcp: None,
             #[cfg(feature = "mcp")]
@@ -2753,6 +2774,20 @@ impl Lume {
                 self.mcp_sync_tools();
                 return task;
             }
+            Message::Debug(epoch, evento) => {
+                let task = self.debug_event(epoch, evento);
+                let _ = self.sync_extensions_tool();
+                return task;
+            }
+            Message::DebugSetup(root, setup) => return self.debug_setup_loaded(root, setup),
+            Message::EseguiCompilato(compilato) => return self.esegui_compilato(*compilato),
+            Message::Configurazioni(messaggio) => return self.configurazioni_messaggio(messaggio),
+            Message::ConfigurazioniSalvate(root, esito) => {
+                return self.configurazioni_salvate(root, esito);
+            }
+            Message::DebugSnippet(epoch, snippet, path, line) => {
+                return self.debug_snippet_loaded(epoch, snippet, path, line);
+            }
             #[cfg(feature = "mcp")]
             Message::Mcp(epoch, evento) => {
                 let task = self.mcp_event(epoch, evento);
@@ -2845,6 +2880,9 @@ impl Lume {
             }
             Message::EditorIn(group, EditorCommand::FoldClicked { line }) => {
                 return self.click_fold_marker(group, line);
+            }
+            Message::EditorIn(group, EditorCommand::BreakpointClicked { line }) => {
+                return self.click_breakpoint_marker(group, line);
             }
             Message::EditorIn(group, cmd) => {
                 self.hover_clear();
@@ -3023,6 +3061,7 @@ impl Lume {
                 return self.apply_menu_intent(MenuIntent::Activate(act));
             }
             Message::Titlebar(message) => match self.titlebar.update(message) {
+                TitlebarIntent::Esegui(azione) => return self.esegui_azione(azione),
                 TitlebarIntent::ToggleMenuRoot
                 | TitlebarIntent::OpenClassic(_)
                 | TitlebarIntent::OpenSearch
@@ -3128,6 +3167,8 @@ impl Lume {
                     Some(OverlayId::CardMcp) => {
                         let _ = self.mcp_card_decide(false);
                     }
+                    // Esc sulla finestra delle configurazioni: come Annulla.
+                    Some(OverlayId::Configurazioni) => self.configurazioni_editor = None,
                     Some(OverlayId::Forge | OverlayId::About | OverlayId::Scorciatoie) | None => {}
                 }
             }
@@ -3526,6 +3567,14 @@ impl Lume {
                         Some(Message::MenuAction(MenuAct::FindUsages))
                     }
                     Key::Named(Named::F11) => Some(Message::ToggleBookmark),
+                    Key::Named(Named::F5) if modifiers.shift() => {
+                        Some(Message::MenuAction(MenuAct::DebugStop))
+                    }
+                    Key::Named(Named::F5) => Some(Message::MenuAction(MenuAct::DebugContinue)),
+                    Key::Named(Named::F9) => {
+                        Some(Message::MenuAction(MenuAct::DebugToggleBreakpoint))
+                    }
+                    Key::Named(Named::F10) => Some(Message::MenuAction(MenuAct::DebugStepOver)),
                     Key::Named(Named::F12) if modifiers.alt() => {
                         Some(Message::MenuAction(MenuAct::ToggleTerminal))
                     }
@@ -3662,6 +3711,11 @@ impl Lume {
         // inattivo» è qui, ed è strutturale.
         for spawn in self.lsp_spawns() {
             subs.push(lsp_subscription(spawn));
+        }
+        // Stesso contratto: la sessione di debug vive finché il ramo è
+        // prodotto; `Closed` lo spegne dopo la raccolta di gdb.
+        if let Some(spawn) = self.debug_spawn() {
+            subs.push(debug_subscription(spawn));
         }
         self.mcp_subscriptions(&mut subs);
         Subscription::batch(subs)
@@ -5906,6 +5960,22 @@ impl Lume {
             MenuIntent::Activate(MenuAct::ToggleTerminal) => {
                 self.show_dock(tools::terminal::ID, true)
             }
+            MenuIntent::Activate(MenuAct::DebugPanel) => self.show_dock(tools::debug::ID, false),
+            MenuIntent::Activate(MenuAct::RunConfigurations) => self.apri_configurazioni(),
+            MenuIntent::Activate(MenuAct::DebugToggleBreakpoint) => {
+                self.toggle_breakpoint_at_cursor()
+            }
+            MenuIntent::Activate(MenuAct::DebugContinue) => self.debug_continue_or_start(),
+            MenuIntent::Activate(MenuAct::DebugStepOver) => {
+                self.debug_action(lume_ui::DebugAction::StepOver)
+            }
+            MenuIntent::Activate(MenuAct::DebugStepIn) => {
+                self.debug_action(lume_ui::DebugAction::StepIn)
+            }
+            MenuIntent::Activate(MenuAct::DebugStepOut) => {
+                self.debug_action(lume_ui::DebugAction::StepOut)
+            }
+            MenuIntent::Activate(MenuAct::DebugStop) => self.stop_debug(),
             MenuIntent::Activate(MenuAct::ToggleEditorBlame) => {
                 if self
                     .groups
@@ -6246,6 +6316,44 @@ fn idle_subscription(
 /// dati. Da qui la stretta di mano — il canale dei comandi lo crea lo stream,
 /// e il **primo** messaggio che manda è la sua estremità. Prima di quello
 /// l'app non ha nessuno a cui parlare, ed è giusto così.
+fn debug_subscription(spawn: crate::debug_mode::DebugSpawn) -> Subscription<Message> {
+    Subscription::run_with(spawn, |spawn: &crate::debug_mode::DebugSpawn| {
+        let spawn = spawn.clone();
+        iced::stream::channel(
+            32,
+            move |mut out: futures::channel::mpsc::Sender<Message>| async move {
+                use futures::SinkExt;
+                let epoch = spawn.epoch;
+                let (comandi, rx_comandi) =
+                    tokio::sync::mpsc::channel(crate::debug_mode::COMMAND_CAPACITY);
+                let (tx_eventi, mut eventi) = tokio::sync::mpsc::channel(64);
+                if out
+                    .send(Message::Debug(
+                        epoch,
+                        crate::debug_mode::DebugEvent::Ready(comandi),
+                    ))
+                    .await
+                    .is_err()
+                {
+                    return;
+                }
+                let attore = crate::debug_mode::run(spawn, rx_comandi, tx_eventi);
+                let inoltro = async {
+                    while let Some(evento) = eventi.recv().await {
+                        if out.send(Message::Debug(epoch, evento)).await.is_err() {
+                            break;
+                        }
+                    }
+                };
+                futures::join!(attore, inoltro);
+                // Come per il language server: mai finire, o iced rilancerebbe
+                // lo stream con la chiave ancora prodotta.
+                std::future::pending::<()>().await;
+            },
+        )
+    })
+}
+
 fn lsp_subscription(spawn: crate::lsp_mode::LspSpawn) -> Subscription<Message> {
     Subscription::run_with(spawn, |spawn: &crate::lsp_mode::LspSpawn| {
         let epoch = spawn.epoch;

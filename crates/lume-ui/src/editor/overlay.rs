@@ -118,6 +118,73 @@ pub fn note_bar_rect(column_x: f32, line_y: f32, line_h: f32) -> Rectangle {
 pub fn line_has_note(ranges: &[Range<usize>], line: usize) -> bool {
     ranges.iter().any(|range| range.contains(&line))
 }
+/// Stato di un punto di interruzione, per il colore del marker.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BreakpointMark {
+    /// L'adattatore l'ha accettato.
+    Verified,
+    /// L'adattatore l'ha rifiutato o lo tiene in sospeso.
+    Rejected,
+    /// Solo un dato: nessuna sessione l'ha ancora visto (design D-DAP-5).
+    Unsent,
+}
+
+impl BreakpointMark {
+    pub fn color(self, theme: &LumeTheme) -> Color {
+        match self {
+            Self::Verified => theme.bad,
+            Self::Rejected => theme.warn,
+            Self::Unsent => Color {
+                a: 0.6,
+                ..theme.bad
+            },
+        }
+    }
+}
+
+/// I segni del debugger in un file (piano 17). Righe a base 0, ordinate.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct DebugMarks<'a> {
+    pub breakpoints: &'a [(usize, BreakpointMark)],
+    /// Dove il programma è fermo, se è in questo file.
+    pub current_line: Option<usize>,
+    /// Righe in cui il programma si è già fermato in questa sessione.
+    pub executed: &'a [usize],
+    /// Il clic sul numero di riga alterna un breakpoint: vero solo se il
+    /// debugger è acceso e il file ha un percorso.
+    pub clickable: bool,
+}
+
+impl DebugMarks<'_> {
+    pub fn breakpoint_on(&self, line: usize) -> Option<BreakpointMark> {
+        self.breakpoints
+            .binary_search_by_key(&line, |(riga, _)| *riga)
+            .ok()
+            .and_then(|indice| self.breakpoints.get(indice))
+            .map(|(_, mark)| *mark)
+    }
+
+    pub fn was_executed(&self, line: usize) -> bool {
+        self.executed.binary_search(&line).is_ok()
+    }
+}
+
+/// Lo sfondo della riga dove il programma è fermo (verde del mockup).
+pub fn debug_current_color(theme: &LumeTheme) -> Color {
+    Color {
+        a: 0.14,
+        ..theme.good
+    }
+}
+
+/// Lo sfondo delle righe in cui il programma si è già fermato.
+pub fn debug_executed_color(theme: &LumeTheme) -> Color {
+    Color {
+        a: 0.05,
+        ..theme.good
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default)]
 pub struct EditorOverlay<'a> {
     /// Ordinati per inizio (lo garantisce `diag_marks::marks_for`).
@@ -136,6 +203,8 @@ pub struct EditorOverlay<'a> {
     pub note_ranges: &'a [Range<usize>],
     /// Proiezione compatta dei blocchi collassati (`&[]` quando nessuno è chiuso).
     pub fold_spans: &'a [super::folding::FoldSpan],
+    /// Breakpoint, riga corrente e righe eseguite del debugger.
+    pub debug: DebugMarks<'a>,
 }
 
 #[cfg(test)]

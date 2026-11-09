@@ -34,6 +34,10 @@ pub enum Strumento {
     /// L'eseguibile di test in corso (`std::env::current_exe`): i test che
     /// lanciano un sottoprocesso di se stessi.
     EseguibileCorrente,
+    /// GNU gdb, che dalla 14 parla il Debug Adapter Protocol (`gdb -i dap`).
+    Gdb,
+    /// Il compilatore C di sistema (`cc`): compila i programmi da debuggare.
+    CompilatoreC,
 }
 
 impl Strumento {
@@ -65,6 +69,8 @@ impl Strumento {
                 }
             }
             Self::EseguibileCorrente => "eseguibile-corrente",
+            Self::Gdb => "gdb",
+            Self::CompilatoreC => "cc",
         }
     }
 
@@ -97,6 +103,10 @@ impl Strumento {
             }
             Self::EseguibileCorrente => {
                 "il binario di test non esiste più su disco: rilancia cargo test"
+            }
+            Self::Gdb => "installa GNU gdb 14 o successivo (con Python) e mettilo su PATH",
+            Self::CompilatoreC => {
+                "installa un compilatore C (gcc o clang, che forniscono cc) e mettilo su PATH"
             }
         }
     }
@@ -272,6 +282,8 @@ mod tests {
             Strumento::ElencoProcessi,
             Strumento::Terminatore,
             Strumento::EseguibileCorrente,
+            Strumento::Gdb,
+            Strumento::CompilatoreC,
         ] {
             let testo = Mancante(strumento).to_string();
             assert!(testo.contains(strumento.nome()), "{testo}");

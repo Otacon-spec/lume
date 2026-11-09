@@ -65,6 +65,7 @@ impl Lume {
                         )));
                     }
                 }
+                ToolRequest::Debug(action) => tasks.push(self.debug_action(action)),
                 ToolRequest::OpenFileAt { path, line } => {
                     if let Some(p) = self.resolve_path(&path) {
                         tasks.push(

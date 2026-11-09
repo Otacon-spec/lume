@@ -1299,6 +1299,8 @@ impl Lume {
             EditorCommand::NoteMarkerClicked { .. } => {}
             // Gestito dal ramo dedicato in `update`, che conosce il gruppo.
             EditorCommand::FoldClicked { .. } => {}
+            // Gestito dal ramo dedicato in `update`, che conosce il gruppo.
+            EditorCommand::BreakpointClicked { .. } => {}
             EditorCommand::ContextMenu {
                 pos,
                 screen_x,

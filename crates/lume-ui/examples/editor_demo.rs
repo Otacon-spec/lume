@@ -244,7 +244,9 @@ impl App {
                 extend,
             } => self.apply_page(direction, lines, extend),
             EditorCommand::Copy => {} // la clipboard e' gia' stata scritta dal widget
-            EditorCommand::NoteMarkerClicked { .. } | EditorCommand::FoldClicked { .. } => {}
+            EditorCommand::NoteMarkerClicked { .. }
+            | EditorCommand::FoldClicked { .. }
+            | EditorCommand::BreakpointClicked { .. } => {}
             // il menu' contestuale e' dell'app, non del widget: la demo non
             // ne ha uno, e ignorarlo qui e' la risposta giusta
             EditorCommand::ContextMenu { .. } => {}

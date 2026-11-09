@@ -10,7 +10,9 @@ pub mod styles;
 pub mod tool;
 
 pub use icons::Icon;
-pub use tool::{Registry, Side, Tool, ToolCtx, ToolEvent, ToolId, ToolKind, ToolRequest};
+pub use tool::{
+    DebugAction, Registry, Side, Tool, ToolCtx, ToolEvent, ToolId, ToolKind, ToolRequest,
+};
 
 /// Font del codice (embedded in main.rs via `.font(...)`).
 pub const MONO: iced::Font = iced::Font::with_name("JetBrains Mono");

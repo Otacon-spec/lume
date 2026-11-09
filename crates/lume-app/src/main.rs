@@ -20,10 +20,13 @@ mod completion;
 mod completion_ui;
 mod conferma_chiusura;
 mod conferma_elimina;
+mod configurazioni;
+mod configurazioni_panel;
 #[cfg(feature = "mcp")]
 mod consenso_mcp;
 mod context_menu;
 mod crash_log;
+mod debug_mode;
 mod diag_marks;
 mod diff_view;
 mod dock;
@@ -33,6 +36,7 @@ mod editor_tab_bar;
 mod environment_picker;
 mod environments;
 mod error_log;
+mod esecuzione;
 mod external;
 mod features;
 mod file_read;
@@ -46,6 +50,7 @@ mod idea_import;
 mod idle;
 mod jj_actions;
 mod layout;
+mod log_grafico;
 mod lsp_mode;
 mod lsp_pos;
 mod lsp_set;
@@ -114,6 +119,8 @@ fn main() -> iced::Result {
     // Senza console (release) un panic non lascerebbe traccia: va su file.
     crash_log::installa();
     startup::traccia("crash_log installato");
+    // GPU e backend scelti da wgpu, errori nel presentare i frame.
+    log_grafico::installa();
     // #12: `lume.exe --prova-crash` scrive un log dei crash e esce con 101,
     // prima di aprire la finestra.
     if crash_log::prova_richiesta(std::env::args_os()) {

@@ -22,9 +22,16 @@ fn crash_di_prova(dati: &std::path::Path) -> String {
         "un panic nel thread principale esce con 101; stderr: {}",
         String::from_utf8_lossy(&uscita.stderr)
     );
+    // Da dccb906 l'avvio scrive anche `grafica.log` nella stessa cartella:
+    // qui conta solo il log del crash.
     let log: Vec<_> = std::fs::read_dir(dati.join("logs"))
         .unwrap()
         .map(|voce| voce.unwrap().path())
+        .filter(|percorso| {
+            percorso
+                .file_name()
+                .is_some_and(|nome| nome.to_string_lossy().starts_with("crash-"))
+        })
         .collect();
     assert_eq!(log.len(), 1, "{log:?}");
     std::fs::read_to_string(&log[0]).unwrap()

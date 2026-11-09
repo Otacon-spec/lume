@@ -17,7 +17,7 @@ path = "src/main.rs"
 # Il blocco SQL (pannello Database, console, connessioni), «default-on».
 # Disattivarlo esclude il crate e i driver Azure/Oracle dal grafo Cargo.
 default = ["sql"]
-sql = ["dep:lume-sql", "dep:roxmltree"]
+sql = ["dep:lume-sql"]
 # Server MCP (piano «Server MCP v1»). Feature opzionale reale: il crate entra
 # nel grafo solo con `--features mcp`; resta fuori dal default fino alla misura.
 mcp = ["dep:lume-mcp"]
@@ -34,6 +34,7 @@ lume-git = { workspace = true }
 lume-sql = { workspace = true, optional = true }
 lume-terminal = { workspace = true }
 lume-lsp = { workspace = true }
+lume-dap = { workspace = true }
 lume-icons = { workspace = true }
 lume-language-servers = { workspace = true }
 lume-notes = { workspace = true }
@@ -41,6 +42,8 @@ lume-jj = { workspace = true }
 lume-mcp = { workspace = true, optional = true }
 lsp-types = { workspace = true }
 serde_json = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
 rfd = { workspace = true }
 ropey = { workspace = true }
 futures = { workspace = true }
@@ -52,7 +55,9 @@ reqwest = { workspace = true }
 directories = { workspace = true }
 wait-timeout = { workspace = true }
 sha2 = { workspace = true }
-roxmltree = { workspace = true, optional = true }
+# Log della grafica (backend wgpu scelto, errori di presentazione).
+log = { workspace = true }
+roxmltree = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 # Apertura readonly non bloccante: FIFO sostituita fra precheck/open non può

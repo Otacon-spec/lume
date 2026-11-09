@@ -214,6 +214,10 @@ attivo dichiara la capability richiesta e le funzionalità spente da
 | Naviga | Trova utilizzi | `Alt+F7` |
 | Naviga | Rinomina… | `Maiusc+F6` |
 | Naviga | Segnalibro | `F11` |
+| Esegui | Avvia o continua | `F5` |
+| Esegui | Passo | `F10` |
+| Esegui | Ferma il debug | `Maiusc+F5` |
+| Esegui | Alterna breakpoint | `F9` |
 | Altrove | Seleziona tutto | `Ctrl+A` |
 | Altrove | Ripeti (alternativa) | `Ctrl+Y` |
 | Altrove | Nuovo appunto | `Ctrl+Alt+N` |

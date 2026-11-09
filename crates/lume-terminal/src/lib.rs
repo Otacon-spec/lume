@@ -348,6 +348,26 @@ impl TerminalSession {
         Self::spawn_command_in_with_wakeup(program, args, size, cwd, None)
     }
 
+    /// Sessione che esegue un programma (non una shell), con ambiente
+    /// aggiuntivo: è la scheda di «Esegui». Argomenti come array, mai
+    /// attraverso una shell.
+    pub fn spawn_program_with_wakeup(
+        program: &Path,
+        args: &[String],
+        env: &[(String, String)],
+        size: TerminalSize,
+        cwd: &Path,
+        wakeup: Option<Wakeup>,
+    ) -> Result<Self, TerminalError> {
+        let mut command = CommandBuilder::new(program);
+        command.args(args);
+        command.cwd(cwd);
+        for (chiave, valore) in env {
+            command.env(chiave, valore);
+        }
+        Self::spawn_with_wakeup(command, size, wakeup)
+    }
+
     pub fn spawn_command_in_with_wakeup(
         program: &str,
         args: &[String],

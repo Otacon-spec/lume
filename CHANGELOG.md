@@ -7,7 +7,30 @@ in alpha e qualificata su Linux.
 
 ## [Non rilasciato]
 
-Nessuna modifica dopo la 0.4.1.
+Nessuna modifica dopo la 0.4.2.
+
+## [0.4.2] — 2026-11-09
+
+Debugger, esecuzione stile IntelliJ e Maven; funzioni nuove provate solo su
+Linux, vedi le [note di rilascio](docs/note-di-rilascio-0.4.2.md).
+
+### Aggiunto
+- Pannello «Debug» con il percorso di esecuzione a cascata: le chiamate fino
+  al punto di arresto con le righe di codice eseguite, storia degli arresti,
+  sorgente del passo, Input, Variabili, Output, Valuta, Breakpoint. Client
+  DAP nuovo (`lume-dap`) con GNU gdb ≥ 14 di sistema.
+- Breakpoint nell'editor (clic sul numero di riga, F9), riga corrente e righe
+  già fermate; menu Esegui con F5, F10, Maiusc+F5.
+- Widget «Esegui» nella barra del titolo: File corrente (Python, Node, Java,
+  C), configurazioni del progetto e goal Maven; ▶ in una scheda del Terminale,
+  🐞 con gdb.
+- Finestra «Configurazioni di esecuzione» (Applicazione, Maven, Comando),
+  salvata in `.lume/launch.toml`.
+- Pannello «Maven» letto da `pom.xml`: ciclo di vita, plugin, profili, moduli.
+- Log della grafica in `<dati>/logs/grafica.log`.
+
+### Cambiato
+- La funzionalità «Esecuzione e debug» compare nel pannello Estensioni.
 
 ## [0.4.1] — 2026-11-06
 

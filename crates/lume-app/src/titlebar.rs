@@ -3,10 +3,12 @@
 //! libero, badge ambiente e controlli finestra. Il drag della finestra parte
 //! dalle zone vuote della barra.
 //!
-//! Zero-mock: run-config, Esegui e Debug del prototipo non hanno backend e
-//! non vengono renderizzati; il branch è un'etichetta (il checkout non c'è ancora).
+//! Widget «Esegui» stile IntelliJ (piano 17): configurazione ▾, ▶ Esegui,
+//! 🐞 Debug, ■ Ferma, ⋮. Zero-mock: ▶ e 🐞 compaiono solo se la
+//! configurazione scelta ha uno strumento trovato che la esegue; il branch è
+//! un'etichetta (il checkout non c'è ancora).
 
-use iced::widget::{Space, button, container, mouse_area, row, text};
+use iced::widget::{Space, button, container, mouse_area, pick_list, row, text};
 use iced::{Alignment, Background, Border, Element, Length, Padding};
 use lume_theme::LumeTheme;
 use lume_ui::icons::Icon;
@@ -14,8 +16,21 @@ use lume_ui::icons::Icon;
 use crate::menu::{MENUS, MenuMode, MenuState};
 use crate::metrics::TITLEBAR_H;
 
+/// I gesti del widget «Esegui».
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EseguiAzione {
+    /// Configurazione scelta, per indice nell'elenco del widget.
+    Scegli(usize),
+    Esegui,
+    Debug,
+    Ferma,
+    ModificaConfigurazioni,
+    AggiornaConfigurazioni,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TitlebarMessage {
+    Esegui(EseguiAzione),
     ToggleMenuRoot,
     OpenClassic(usize),
     HoverClassic(usize),
@@ -29,6 +44,7 @@ pub enum TitlebarMessage {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TitlebarIntent {
+    Esegui(EseguiAzione),
     ToggleMenuRoot,
     OpenClassic(usize),
     HoverClassic(usize),
@@ -45,6 +61,7 @@ pub struct TitlebarState;
 impl TitlebarState {
     pub fn update(&mut self, message: TitlebarMessage) -> TitlebarIntent {
         match message {
+            TitlebarMessage::Esegui(azione) => TitlebarIntent::Esegui(azione),
             TitlebarMessage::ToggleMenuRoot => TitlebarIntent::ToggleMenuRoot,
             TitlebarMessage::OpenClassic(index) => TitlebarIntent::OpenClassic(index),
             TitlebarMessage::HoverClassic(index) => TitlebarIntent::HoverClassic(index),
@@ -67,7 +84,145 @@ pub struct TitlebarInfo<'a> {
     pub branch: Option<&'a str>,
     /// Etichetta dell'ambiente selezionato (badge a destra).
     pub environment: &'a str,
+    /// Il widget «Esegui», quando c'è un progetto.
+    pub run: Option<RunWidget<'a>>,
 }
+
+/// Stato del widget «Esegui» preparato dall'app.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct RunWidget<'a> {
+    pub voci: &'a [String],
+    pub scelta: usize,
+    /// ▶ può eseguire la configurazione scelta.
+    pub esegui: bool,
+    /// 🐞 può avviarne il debug.
+    pub debug: bool,
+    /// Una sessione di debug è viva: si mostra ■.
+    pub ferma: bool,
+}
+
+/// Una voce del selettore: indice e testo, `Copy` per i messaggi.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct VoceRun<'a> {
+    indice: usize,
+    etichetta: &'a str,
+}
+
+impl std::fmt::Display for VoceRun<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.etichetta)
+    }
+}
+
+fn run_button<'a>(
+    t: &LumeTheme,
+    icon: Icon,
+    color: iced::Color,
+    azione: EseguiAzione,
+) -> Element<'a, TitlebarMessage> {
+    button(
+        container(icon.view(14.0, color))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .align_x(Alignment::Center)
+            .align_y(Alignment::Center),
+    )
+    .width(28)
+    .height(26)
+    .padding(0)
+    .style(lume_ui::styles::hover_row(color, t.hover2, None, 5.0))
+    .on_press(TitlebarMessage::Esegui(azione))
+    .into()
+}
+
+fn run_widget<'a>(t: &'a LumeTheme, run: RunWidget<'a>) -> Element<'a, TitlebarMessage> {
+    // Come in IntelliJ, le azioni sulle configurazioni stanno in fondo allo
+    // stesso menu: indici oltre le voci.
+    let mut voci: Vec<VoceRun<'a>> = run
+        .voci
+        .iter()
+        .enumerate()
+        .map(|(indice, etichetta)| VoceRun {
+            indice,
+            etichetta: etichetta.as_str(),
+        })
+        .collect();
+    let base = voci.len();
+    voci.push(VoceRun {
+        indice: base,
+        etichetta: "Modifica configurazioni…",
+    });
+    voci.push(VoceRun {
+        indice: base + 1,
+        etichetta: "Aggiorna configurazioni",
+    });
+    let scelta = voci.get(run.scelta).copied();
+    let (ui, hover2, popup, border, sel, text_color) =
+        (t.ui, t.hover2, t.surface, t.border2, t.sel, t.text);
+    let selettore = pick_list(voci, scelta, move |voce: VoceRun<'a>| {
+        TitlebarMessage::Esegui(if voce.indice == base {
+            EseguiAzione::ModificaConfigurazioni
+        } else if voce.indice == base + 1 {
+            EseguiAzione::AggiornaConfigurazioni
+        } else {
+            EseguiAzione::Scegli(voce.indice)
+        })
+    })
+    .width(RUN_SELECTOR_W)
+    .text_size(12.5)
+    .padding(Padding::from([3, 8]))
+    .style(move |_, status| pick_list::Style {
+        text_color: ui,
+        placeholder_color: ui,
+        handle_color: ui,
+        background: Background::Color(
+            if matches!(
+                status,
+                pick_list::Status::Hovered | pick_list::Status::Opened { .. }
+            ) {
+                hover2
+            } else {
+                iced::Color::TRANSPARENT
+            },
+        ),
+        border: Border {
+            radius: 5.0.into(),
+            ..Border::default()
+        },
+    })
+    .menu_style(move |_| iced::overlay::menu::Style {
+        background: Background::Color(popup),
+        border: Border {
+            color: border,
+            width: 1.0,
+            radius: 6.0.into(),
+        },
+        text_color,
+        selected_text_color: text_color,
+        selected_background: Background::Color(sel),
+        shadow: iced::Shadow::default(),
+    });
+    // Posti fissi per ▶ 🐞 ■: il selettore non si sposta quando compaiono.
+    let mut pulsanti = row![].spacing(2).align_y(Alignment::Center);
+    if run.esegui {
+        pulsanti = pulsanti.push(run_button(t, Icon::Play, t.good, EseguiAzione::Esegui));
+    }
+    if run.debug {
+        pulsanti = pulsanti.push(run_button(t, Icon::Debug, t.good, EseguiAzione::Debug));
+    }
+    if run.ferma {
+        pulsanti = pulsanti.push(run_button(t, Icon::Stop, t.bad, EseguiAzione::Ferma));
+    }
+    row![selettore, container(pulsanti).width(RUN_BUTTONS_W)]
+        .spacing(2)
+        .align_y(Alignment::Center)
+        .into()
+}
+
+/// Larghezza fissa del selettore della configurazione.
+pub const RUN_SELECTOR_W: f32 = 180.0;
+/// Spazio riservato a ▶ 🐞 ■.
+pub const RUN_BUTTONS_W: f32 = 3.0 * 28.0 + 2.0 * 2.0;
 
 #[derive(Debug, Default)]
 pub struct Titlebar {
@@ -162,18 +317,24 @@ fn render<'a>(
 ) -> Element<'a, TitlebarMessage> {
     let classic = menu.mode == MenuMode::Classica;
 
-    // cluster destro: badge ambiente + controlli finestra (uguale nei due modi)
-    let right = row![
-        env_badge(t, info.environment),
-        container(controls.view(t)).padding(Padding {
-            top: 0.0,
-            right: 0.0,
-            bottom: 0.0,
-            left: 4.0,
-        }),
-    ]
-    .spacing(8)
-    .align_y(Alignment::Center);
+    // cluster destro: widget «Esegui», badge ambiente, controlli finestra
+    let mut right = row![].spacing(8).align_y(Alignment::Center);
+    if let Some(run) = info.run {
+        right = right.push(run_widget(t, run));
+    }
+    let right = right.push(
+        row![
+            env_badge(t, info.environment),
+            container(controls.view(t)).padding(Padding {
+                top: 0.0,
+                right: 0.0,
+                bottom: 0.0,
+                left: 4.0,
+            }),
+        ]
+        .spacing(8)
+        .align_y(Alignment::Center),
+    );
 
     let base = if classic {
         // barra classica: voci menù, pill 240 centrata nello spazio libero

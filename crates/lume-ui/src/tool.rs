@@ -358,6 +358,55 @@ pub enum ToolRequest {
     JjAction(JjAction),
     /// Annulla il caricamento o l'azione jj in corso.
     JjCancel,
+    // ── Debugger ─────────────────────────────────────────────────
+    /// Un gesto del pannello Debug; `lume-app` lo traduce in DAP.
+    Debug(DebugAction),
+}
+
+/// I gesti del pannello Debug (piano 17). Solo indici, percorsi e testo:
+/// `lume-ui` non dipende da `lume-dap`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DebugAction {
+    /// Rilegge `.lume/launch.toml` e cerca di nuovo l'adattatore.
+    ReloadConfigs,
+    /// Sceglie la configurazione di lancio.
+    SelectConfig(usize),
+    /// Avvia la configurazione scelta (chiede fiducia la prima volta).
+    Start,
+    /// Conferma la fiducia chiesta da `Start`.
+    TrustAndStart,
+    /// Annulla la richiesta di fiducia.
+    CancelTrust,
+    Continue,
+    Pause,
+    StepOver,
+    StepIn,
+    StepOut,
+    Stop,
+    /// Storia degli arresti: precedente, successivo, ultimo.
+    HistoryPrevious,
+    HistoryNext,
+    HistoryLatest,
+    /// Frame della cascata, contato dal più interno (0).
+    SelectFrame(usize),
+    /// Espande o chiude una variabile strutturata.
+    ToggleVariable(i64),
+    Evaluate(String),
+    OpenSource {
+        path: PathBuf,
+        line: u32,
+    },
+    ClearConsole,
+    /// Toglie un punto di interruzione dall'elenco.
+    RemoveBreakpoint {
+        path: PathBuf,
+        line: u32,
+    },
+    /// Pannello Maven: esegue i goal con i profili attivi, nel Terminale.
+    MavenEsegui {
+        goal: Vec<String>,
+        profili: Vec<String>,
+    },
 }
 
 /// Modulo «nuova origine dati». Solo la parte **non segreta**: la password

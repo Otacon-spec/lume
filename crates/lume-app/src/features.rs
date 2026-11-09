@@ -45,13 +45,16 @@ pub enum Feature {
     /// Server MCP opzionale. La variante rimane nota anche nei build senza
     /// feature Cargo, come Database.
     Mcp,
+    /// Debugger DAP (piano 17): una sessione per volta, avviata da una
+    /// configurazione di `.lume/launch.toml`.
+    Debugger,
 }
 
 impl Feature {
     /// Ogni variante, a prescindere dai cfg del build: chi riconcilia lo
     /// stato d'inattività non deve perdere il Database in un build senza la
     /// feature `sql` (il tool resta registrato e lo `SqlWorkspace` esiste).
-    pub const ALL: [Feature; 8] = [
+    pub const ALL: [Feature; 9] = [
         Feature::Git,
         Feature::Database,
         Feature::Terminal,
@@ -60,6 +63,7 @@ impl Feature {
         Feature::Notes,
         Feature::LanguageServer,
         Feature::Mcp,
+        Feature::Debugger,
     ];
 }
 
@@ -219,6 +223,23 @@ const MCP: FeatureSpec = FeatureSpec {
 /// senza `sql` non ha la riga Database nel pannello Estensioni e non registra
 /// il tool (`tools/mod.rs`). Il descrittore resta leggibile per identità
 /// persistita, con `wired: false` e nessun tool disponibile.
+/// Chiave del debugger, condivisa con il tool Debug.
+pub const DEBUGGER_KEY: &str = "debugger";
+
+/// `SoloStop`: un «Avvia» generico non saprebbe quale programma lanciare;
+/// si avvia dal pannello Debug scegliendo una configurazione. Nessuna
+/// ibernazione: un programma fermo su un breakpoint è lavoro dell'utente.
+const DEBUGGER: FeatureSpec = FeatureSpec {
+    feature: Feature::Debugger,
+    key: DEBUGGER_KEY,
+    label: "Esecuzione e debug",
+    tools: &[tools::debug::ID, tools::maven::ID],
+    unit: ("sessione", "sessioni"),
+    startable: Startable::SoloStop,
+    wired: true,
+    idle: None,
+};
+
 pub const FEATURES: &[&FeatureSpec] = &[
     &GIT,
     #[cfg(feature = "sql")]
@@ -230,6 +251,7 @@ pub const FEATURES: &[&FeatureSpec] = &[
     &LANGUAGE_SERVER,
     #[cfg(feature = "mcp")]
     &MCP,
+    &DEBUGGER,
 ];
 
 /// Il descrittore di una funzionalità.
@@ -247,6 +269,7 @@ pub const fn spec(feature: Feature) -> &'static FeatureSpec {
         Feature::Notes => &APPUNTI,
         Feature::LanguageServer => &LANGUAGE_SERVER,
         Feature::Mcp => &MCP,
+        Feature::Debugger => &DEBUGGER,
     }
 }
 

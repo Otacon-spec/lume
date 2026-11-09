@@ -38,8 +38,9 @@ jobs:
         run: |
           sudo apt-get update
           # build-essential serve a libdbus-sys `vendored` (vault su Linux);
-          # non serve libdbus-1-dev.
-          sudo apt-get install -y --no-install-recommends build-essential pkg-config libwayland-dev libxkbcommon-dev libxkbcommon-x11-0 libx11-dev gnome-keyring xvfb xauth x11-utils
+          # non serve libdbus-1-dev. gdb (≥ 14, con DAP) e cc servono alla
+          # prova reale del debugger, `lume-dap --test gdb_reale` (piano 17).
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config libwayland-dev libxkbcommon-dev libxkbcommon-x11-0 libx11-dev gnome-keyring xvfb xauth x11-utils gdb
       - name: Toolchain
         run: |
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component clippy

@@ -230,6 +230,14 @@ impl AppShell {
                     );
                 }
             }
+            Some(OverlayId::Configurazioni) => {
+                if let Some(editor) = app.configurazioni_editor.as_ref() {
+                    layers = layers.push(
+                        crate::configurazioni_panel::view(editor, theme)
+                            .map(Message::Configurazioni),
+                    );
+                }
+            }
             Some(OverlayId::ConfermaChiusura) => {
                 if let Some(riquadro) = app.riquadro_chiusura() {
                     layers = layers.push(

@@ -26,6 +26,10 @@ const CORPO_MAX: usize = 2048;
 
 pub struct ErrorLog {
     dir: PathBuf,
+    /// Nome base dei file: `<nome>.log`, `<nome>.1.log`, `<nome>.2.log`.
+    nome: &'static str,
+    /// Byte massimi del corpo di una riga, oltre si tronca con `…`.
+    corpo_max: usize,
     tetto: u64,
     utente: Option<PathBuf>,
     ultimo: Option<String>,
@@ -35,6 +39,8 @@ impl ErrorLog {
     pub fn new(dir: PathBuf, utente: Option<PathBuf>) -> Self {
         Self {
             dir,
+            nome: "errors",
+            corpo_max: CORPO_MAX,
             tetto: TETTO_FILE,
             utente,
             ultimo: None,
@@ -44,6 +50,14 @@ impl ErrorLog {
     /// Restituisce il logger nella cartella dati corrente, se disponibile.
     pub fn predefinito() -> Option<Self> {
         cartella().map(|dir| Self::new(dir, cartella_utente()))
+    }
+
+    /// Stessa rotazione e anonimizzazione, su `<nome>.log` e con righe
+    /// lunghe fino a `corpo_max` byte. Per il log della grafica.
+    pub fn con_nome(mut self, nome: &'static str, corpo_max: usize) -> Self {
+        self.nome = nome;
+        self.corpo_max = corpo_max;
+        self
     }
 
     #[cfg(test)]
@@ -65,7 +79,7 @@ impl ErrorLog {
 
     fn registra(&self, quando: &str, testo: &str) -> std::io::Result<()> {
         std::fs::create_dir_all(&self.dir)?;
-        let riga = riga(quando, testo);
+        let riga = riga(quando, testo, self.corpo_max);
         let corrente = self.percorso(0);
         let dimensione = std::fs::metadata(&corrente).map_or(0, |meta| meta.len());
         let aggiunta = u64::try_from(riga.len()).unwrap_or(u64::MAX);
@@ -82,9 +96,9 @@ impl ErrorLog {
 
     fn percorso(&self, generazione: usize) -> PathBuf {
         if generazione == 0 {
-            self.dir.join("errors.log")
+            self.dir.join(format!("{}.log", self.nome))
         } else {
-            self.dir.join(format!("errors.{generazione}.log"))
+            self.dir.join(format!("{}.{generazione}.log", self.nome))
         }
     }
 
@@ -108,15 +122,15 @@ fn adesso() -> String {
     jiff::Zoned::now().strftime("%Y-%m-%d %H:%M:%S").to_string()
 }
 
-fn riga(quando: &str, testo: &str) -> String {
+fn riga(quando: &str, testo: &str, corpo_max: usize) -> String {
     let mut corpo = testo
         .split(['\r', '\n'])
         .map(str::trim)
         .filter(|parte| !parte.is_empty())
         .collect::<Vec<_>>()
         .join(" | ");
-    if corpo.len() > CORPO_MAX {
-        let mut fine = CORPO_MAX;
+    if corpo.len() > corpo_max {
+        let mut fine = corpo_max;
         while !corpo.is_char_boundary(fine) {
             fine -= 1;
         }

@@ -15,7 +15,9 @@ pub mod widget;
 
 pub use commands::{EditorCommand, Motion, PageDirection};
 pub use folding::{FoldProjection, FoldProjectionRef, FoldSpan, is_foldable_start};
-pub use overlay::{BlameAuthorLine, DiagnosticMark, EditorOverlay, MarkSeverity};
+pub use overlay::{
+    BlameAuthorLine, BreakpointMark, DebugMarks, DiagnosticMark, EditorOverlay, MarkSeverity,
+};
 pub use popup::{CARD_MAX_COLS, EditorPopup, HoverCard, HoverLine, PopupRow, clip_text};
 pub use state::EditorState;
 pub use widget::{EditorView, FONT_SIZE, LINE_H};

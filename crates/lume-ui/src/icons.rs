@@ -51,9 +51,17 @@ pub enum Icon {
     Check,
     /// Pannello «Jujutsu»: cambiamenti e push.
     Jujutsu,
+    // Debugger (piano 17): pannello, Pausa e i tre passi.
+    Debug,
+    Pause,
+    StepOver,
+    StepInto,
+    StepOut,
+    /// Pannello Maven (piano 17).
+    Maven,
 }
 
-const ALL: [Icon; 33] = [
+const ALL: [Icon; 39] = [
     Icon::Project,
     Icon::Search,
     Icon::Git,
@@ -87,6 +95,12 @@ const ALL: [Icon; 33] = [
     Icon::Merge,
     Icon::Check,
     Icon::Jujutsu,
+    Icon::Debug,
+    Icon::Pause,
+    Icon::StepOver,
+    Icon::StepInto,
+    Icon::StepOut,
+    Icon::Maven,
 ];
 
 /// Come si disegna il corpo: a contorno (la maggioranza) o pieno (Play e
@@ -188,6 +202,36 @@ impl Icon {
                 r#"<path d="M5.5 3L8 5.5 10.5 3M5.5 13L8 10.5 10.5 13"/>"#,
             ),
             Icon::Play => (16, Paint::Fill, r#"<path d="M4 2.5l9 5.5-9 5.5z"/>"#),
+            Icon::Debug => (
+                18,
+                Paint::Stroke("1.5"),
+                r#"<rect x="5.5" y="6" width="7" height="9.5" rx="3.5"/><path d="M9 9v6.5M5.5 9.5H2.5M5.5 13H3M12.5 9.5h3M12.5 13H15M7 6.3L5.3 3.8M11 6.3l1.7-2.5"/>"#,
+            ),
+            Icon::Maven => (
+                18,
+                Paint::Stroke("1.5"),
+                r#"<path d="M3.5 14.5v-10l5.5 6 5.5-6v10"/>"#,
+            ),
+            Icon::Pause => (
+                16,
+                Paint::Fill,
+                r#"<rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/>"#,
+            ),
+            Icon::StepOver => (
+                16,
+                Paint::Stroke("1.4"),
+                r#"<path d="M3 9.5a5 5 0 0 1 10 0"/><path d="M13.2 5.5v4h-4"/><circle cx="8" cy="13.2" r="1.3"/>"#,
+            ),
+            Icon::StepInto => (
+                16,
+                Paint::Stroke("1.4"),
+                r#"<path d="M8 1.8v8.4"/><path d="M4.8 7.2L8 10.4l3.2-3.2"/><circle cx="8" cy="13.6" r="1.3"/>"#,
+            ),
+            Icon::StepOut => (
+                16,
+                Paint::Stroke("1.4"),
+                r#"<path d="M8 10.4V2"/><path d="M4.8 5.2L8 2l3.2 3.2"/><circle cx="8" cy="13.6" r="1.3"/>"#,
+            ),
             Icon::Stop => (
                 16,
                 Paint::Fill,

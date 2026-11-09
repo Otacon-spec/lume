@@ -84,12 +84,18 @@ host pulito; qualificazione Windows (dialoghi, ACL, Cestino, PTY, rendering,
 MCP, processi) e macOS (mai eseguito); la CI di GitHub realmente eseguita sul
 commit distribuito.
 
-## 8. Esecuzione, debug e remoto — solo design
+## 8. Esecuzione, debug e remoto
 
-DAP e sviluppo remoto via SSH sono confermati nel design e **non
-implementati**: nessun runtime, nessun client di debug e nessuna connessione
-remota. Arrivano come incrementi separati con backend reali, dopo la
-qualificazione delle piattaforme.
+**Debugger (piano 17, dal 9 novembre 2026):** client DAP `lume-dap` con
+`gdb -i dap` reale, pannello Debug con il percorso di esecuzione a cascata
+(design TraceLine), breakpoint nel gutter, riga corrente, passi, variabili,
+output e valutazione. Widget «Esegui» nella barra del titolo come IntelliJ:
+File corrente, configurazioni di `.lume/launch.toml` e goal Maven, con ▶ nel
+Terminale e 🐞 con gdb. Provato su Linux con gdb 17.1 e Maven 3.9.16; Windows
+e macOS non qualificati, lldb-dap, debugpy e debug Java non ancora provati.
+
+Lo sviluppo remoto via SSH resta confermato nel design e **non
+implementato**: nessuna connessione remota.
 
 ## Ordine dopo l'alpha
 
@@ -100,7 +106,8 @@ qualificazione delle piattaforme.
 3. Primo client MCP reale collegato all'istanza, in un contesto isolato.
 4. Estrazione dei coordinatori da `app.rs`, a passi.
 5. Firma degli artefatti e qualificazione Windows; poi macOS.
-6. DAP e SSH, solo quando esiste un backend da provare.
+6. SSH, solo quando esiste un backend da provare; DAP su altre piattaforme e
+   altri adattatori dopo una prova reale.
 
 ## Criterio di completamento
 

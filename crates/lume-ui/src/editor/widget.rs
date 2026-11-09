@@ -24,8 +24,8 @@ use unicode_width::UnicodeWidthChar;
 use super::commands::{EditorCommand, Motion, PageDirection};
 use super::folding::{FoldProjectionRef, is_foldable_start};
 use super::overlay::{
-    EditorOverlay, MarkSeverity, dot_rect, line_has_note, marks_on_line, note_bar_rect,
-    underline_rect, worst_severity,
+    EditorOverlay, MarkSeverity, debug_current_color, debug_executed_color, dot_rect,
+    line_has_note, marks_on_line, note_bar_rect, underline_rect, worst_severity,
 };
 use super::popup::{
     BOX_PAD_X, BOX_PAD_Y, CELL_W, DETAIL_MAX_COLS, LABEL_MAX_COLS, OverlayKeys, POPUP_VISIBLE,
@@ -53,6 +53,10 @@ const TEXT_X0: f32 = GUTTER_W + MARKER_W;
 pub(crate) fn in_marker_column(x_rel: f32) -> bool {
     (GUTTER_W..TEXT_X0).contains(&x_rel)
 }
+/// La colonna dei numeri di riga: lì il clic alterna un breakpoint.
+pub(crate) fn in_line_number_column(x_rel: f32) -> bool {
+    (0.0..GUTTER_W).contains(&x_rel)
+}
 /// Range normalizzati che intersecano una finestra di caratteri, senza
 /// allocazioni né scansione del prefisso fuori viewport.
 fn selections_in(ranges: &[lume_core::Range], from: usize, to: usize) -> &[lume_core::Range] {
@@ -64,6 +68,8 @@ fn selections_in(ranges: &[lume_core::Range], from: usize, to: usize) -> &[lume_
 
 /// Padding a destra dei numeri di riga (right-aligned).
 const GUTTER_PAD_R: f32 = 14.0;
+/// Diametro del pallino del breakpoint nella colonna dei numeri.
+const BREAKPOINT_D: f32 = 9.0;
 fn display_columns(characters: impl Iterator<Item = char>) -> usize {
     characters.fold(0, |column, character| {
         if character == '\t' {
@@ -1151,6 +1157,13 @@ impl<'a, M> Widget<M, iced::Theme, iced::Renderer> for EditorView<'a, M> {
                         shell.request_redraw();
                         return;
                     }
+                    if self.overlay.debug.clickable && in_line_number_column(pos.x - bounds.x) {
+                        state.is_dragging.set(false);
+                        self.publish(shell, EditorCommand::BreakpointClicked { line });
+                        shell.capture_event();
+                        shell.request_redraw();
+                        return;
+                    }
                     if in_marker_column(pos.x - bounds.x) && self.line_is_foldable(line) {
                         state.is_dragging.set(false);
                         self.publish(shell, EditorCommand::FoldClicked { line });
@@ -1381,6 +1394,26 @@ impl<'a, M> Widget<M, iced::Theme, iced::Renderer> for EditorView<'a, M> {
             // Sfondo dell'editor.
             renderer.fill_quad(quad(bounds), self.theme.bg);
 
+            // Righe già fermate dal debugger e riga dove il programma è
+            // fermo: sotto la riga del cursore e sotto il testo.
+            for &riga in self.overlay.debug.executed {
+                if proj.is_line_hidden(riga) {
+                    continue;
+                }
+                let ey = line_y(riga);
+                if ey + LINE_H > bounds.y && ey < bounds.y + bounds.height {
+                    renderer.fill_quad(
+                        quad(Rectangle {
+                            x: bounds.x,
+                            y: ey,
+                            width: bounds.width,
+                            height: LINE_H,
+                        }),
+                        debug_executed_color(self.theme),
+                    );
+                }
+            }
+
             // Sfondo riga corrente: quad piena larghezza PRIMA del testo.
             let cy = line_y(cursor_line);
             if cy + LINE_H > bounds.y && cy < bounds.y + bounds.height {
@@ -1393,6 +1426,32 @@ impl<'a, M> Widget<M, iced::Theme, iced::Renderer> for EditorView<'a, M> {
                     }),
                     self.theme.surface,
                 );
+            }
+
+            if let Some(riga) = self.overlay.debug.current_line
+                && !proj.is_line_hidden(riga)
+            {
+                let dy = line_y(riga);
+                if dy + LINE_H > bounds.y && dy < bounds.y + bounds.height {
+                    renderer.fill_quad(
+                        quad(Rectangle {
+                            x: bounds.x,
+                            y: dy,
+                            width: bounds.width,
+                            height: LINE_H,
+                        }),
+                        debug_current_color(self.theme),
+                    );
+                    renderer.fill_quad(
+                        quad(Rectangle {
+                            x: bounds.x,
+                            y: dy,
+                            width: 2.0,
+                            height: LINE_H,
+                        }),
+                        self.theme.good,
+                    );
+                }
             }
 
             let mut cursore_highlight = 0usize;
@@ -1588,6 +1647,41 @@ impl<'a, M> Widget<M, iced::Theme, iced::Renderer> for EditorView<'a, M> {
                     })
                 });
                 let num_w = number.min_bounds().width;
+                // Breakpoint e freccia della riga corrente, a sinistra del
+                // numero (nel mockup stanno nella colonna prima dei numeri).
+                // Sulla riga corrente vince la freccia, come nel mockup.
+                let corrente_debug = self.overlay.debug.current_line == Some(line);
+                if let Some(segno) = self
+                    .overlay
+                    .debug
+                    .breakpoint_on(line)
+                    .filter(|_| !corrente_debug)
+                {
+                    renderer.fill_quad(
+                        Quad {
+                            bounds: Rectangle {
+                                x: bounds.x + 4.0,
+                                y: y + (LINE_H - BREAKPOINT_D) / 2.0,
+                                width: BREAKPOINT_D,
+                                height: BREAKPOINT_D,
+                            },
+                            border: iced::Border {
+                                radius: (BREAKPOINT_D / 2.0).into(),
+                                ..iced::Border::default()
+                            },
+                            ..Quad::default()
+                        },
+                        segno.color(self.theme),
+                    );
+                }
+                if corrente_debug {
+                    renderer.fill_text(
+                        mono_text("▶".to_owned(), 12.0),
+                        Point::new(bounds.x + 3.0, y),
+                        self.theme.good,
+                        gutter_bounds,
+                    );
+                }
                 renderer.fill_paragraph(
                     number,
                     Point::new(bounds.x + GUTTER_W - GUTTER_PAD_R - num_w, y),

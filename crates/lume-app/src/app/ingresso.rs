@@ -26,6 +26,7 @@ impl Message {
         let (ingresso, persistenza) = match self {
             Self::SyntaxViewport(_) | Self::Syntax(_) => (Asincrono, Nessuna),
             Self::Forge(_) => (Gesto, Nessuna),
+            Self::Configurazioni(_) => (Gesto, Nessuna),
             Self::Tool(id, evento) => (
                 if *id == tools::terminal::ID
                     && matches!(
@@ -124,6 +125,11 @@ impl Message {
             | Self::LspInstalled(..)
             | Self::LspInstallProgress(..)
             | Self::Lsp(..)
+            | Self::Debug(..)
+            | Self::DebugSetup(..)
+            | Self::DebugSnippet(..)
+            | Self::EseguiCompilato(..)
+            | Self::ConfigurazioniSalvate(..)
             | Self::LspChangeDebounced(..)
             | Self::LspChangeRetry(..)
             | Self::HoverDue(..) => (Asincrono, Nessuna),

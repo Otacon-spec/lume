@@ -208,6 +208,7 @@ mod tests {
             OverlayId::Albero,
             OverlayId::CodeActions,
             OverlayId::Forge,
+            OverlayId::Configurazioni,
             OverlayId::Recents,
             OverlayId::Find,
             OverlayId::ConfermaChiusura,
@@ -235,6 +236,7 @@ mod tests {
                 | OverlayId::Albero
                 | OverlayId::CodeActions
                 | OverlayId::Forge
+                | OverlayId::Configurazioni
                 | OverlayId::Recents
                 | OverlayId::Find
                 | OverlayId::ConfermaChiusura
@@ -277,6 +279,8 @@ pub enum OverlayId {
     CodeActions,
     /// Il riquadro per comporre comandi da inviare al terminale.
     Forge,
+    /// La finestra «Configurazioni di esecuzione».
+    Configurazioni,
     /// L'elenco dei file recenti (Ctrl+E).
     Recents,
     /// Il riquadro «Trova»/«Sostituisci» (Ctrl+F / Ctrl+R).
@@ -328,6 +332,7 @@ impl OverlayId {
             | Self::Albero
             | Self::CodeActions
             | Self::Forge
+            | Self::Configurazioni
             | Self::Recents
             | Self::Find => None,
         }

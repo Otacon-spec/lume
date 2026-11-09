@@ -4,7 +4,7 @@ members = ["crates/*", "vendor/iced_tiny_skia"]
 exclude = ["vendor/tree-sitter"]
 
 [workspace.package]
-version = "0.4.1"
+version = "0.4.2"
 edition = "2024"
 # oracledb 26.0.0-beta.2 chiede 1.89 (rust-version nel suo Cargo.toml); la CI la verifica.
 rust-version = "1.89"
@@ -43,6 +43,9 @@ iced = { version = "0.14", default-features = false, features = [
     "wayland",
 ] }
 serde = { version = "1", features = ["derive"] }
+# Facciata `log`: già nel lock tramite iced/wgpu. Lume installa un logger
+# solo per la grafica (`crates/lume-app/src/log_grafico.rs`).
+log = "0.4"
 toml = "0.8"
 ropey = "1.6"
 memchr = "2.8"
@@ -165,6 +168,7 @@ lume-sql = { path = "crates/lume-sql" }
 # Senza feature di default: il server finto scriptabile resta fuori dal
 # binario. Chi prova lume-lsp lo accende da se, essendo nei suoi default.
 lume-lsp = { path = "crates/lume-lsp", default-features = false }
+lume-dap = { path = "crates/lume-dap" }
 lume-icons = { path = "crates/lume-icons" }
 lume-language-servers = { path = "crates/lume-language-servers" }
 lume-notes = { path = "crates/lume-notes" }

@@ -1250,6 +1250,12 @@ impl Lume {
         }
         self.cancel_git_action();
         self.project_root = Some(root.clone());
+        // Configurazioni di esecuzione e debug della radice nuova: solo stat
+        // e due letture piccole, in background, su questo gesto.
+        self.pending_tool_requests.push((
+            tools::debug::ID,
+            ToolRequest::Debug(lume_ui::DebugAction::ReloadConfigs),
+        ));
         #[cfg(feature = "sql")]
         {
             self.clear_idea();
