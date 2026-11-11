@@ -97,7 +97,7 @@ zip = { version = "9", default-features = false, features = ["deflate-flate2-zli
 flate2 = "1"
 tar = "0.4"
 lsp-types = "0.97"
-sha2 = "0.10"
+sha2 = "0.11"
 portable-pty = "0.9.0"
 roxmltree = "0.21"
 alacritty_terminal = { version = "0.26.0", default-features = false }
