@@ -121,8 +121,10 @@ async fn recipe_progress_native_status_end_old_epoch_successore_reali() -> Esito
         return Err(io::Error::other("binario reale non assoluto/file").into());
     }
     eprintln!(
-        "APP_REALE75:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "APP_REALE75:binario_sha256={}",
+        crate::aggiornamento::esadecimale(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let fixture = tempfile::Builder::new()
         .prefix("lume-progress75-città spazio-")

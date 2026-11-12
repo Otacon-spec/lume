@@ -103,8 +103,10 @@ async fn firma_reale_menu_e_digitazione() -> Esito {
         .ok_or_else(|| io::Error::other("serve LUME_RUST_ANALYZER reale"))?;
     assert!(program.is_absolute() && program.is_file());
     eprintln!(
-        "SIGNATURE_REALE:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "SIGNATURE_REALE:binario_sha256={}",
+        crate::aggiornamento::esadecimale(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let base = tempfile::tempdir()?;
     let root = base.path().join("progetto città spazio");

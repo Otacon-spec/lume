@@ -376,8 +376,10 @@ async fn mailbox_hover_completion_definition_change_last_sender_drop_reali() -> 
         "binario reale non assoluto/file",
     )?;
     eprintln!(
-        "ACTOR_REALE63:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "ACTOR_REALE63:binario_sha256={}",
+        lume_lsp::hex::hex(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let fixture = Fixture::nuova()?;
     let src = fixture.0.join("src");

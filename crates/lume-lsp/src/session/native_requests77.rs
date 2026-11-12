@@ -345,8 +345,8 @@ async fn scenario77(automatic: bool) -> Esito {
         );
     }
     eprintln!(
-        "REQUEST_REALE77:server_sha256={:x}",
-        Sha256::digest(std::fs::read(&program)?)
+        "REQUEST_REALE77:server_sha256={}",
+        crate::hex::hex(&Sha256::digest(std::fs::read(&program)?))
     );
     let dir = Directory77::nuova()?;
     let root = &dir.0;

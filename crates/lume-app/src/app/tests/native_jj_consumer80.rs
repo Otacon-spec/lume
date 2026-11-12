@@ -200,8 +200,10 @@ async fn pannello_task_jj_reale_snapshot_describe_new_reload() -> Esito80 {
         Some(home.clone().into_os_string())
     );
     eprintln!(
-        "JJ_APP_REALE80:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "JJ_APP_REALE80:binario_sha256={}",
+        crate::aggiornamento::esadecimale(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let fixture = tempfile::Builder::new()
         .prefix("lume-jj80-città spazio-")

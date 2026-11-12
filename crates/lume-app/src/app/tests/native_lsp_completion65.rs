@@ -71,8 +71,10 @@ async fn recipe_completamento_accetta_undo_replay_reali() -> Esito {
         return Err(io::Error::other("binario reale non assoluto/file").into());
     }
     eprintln!(
-        "APP_REALE65:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "APP_REALE65:binario_sha256={}",
+        crate::aggiornamento::esadecimale(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let fixture = tempfile::Builder::new()
         .prefix("lume-completion65-città spazio-")

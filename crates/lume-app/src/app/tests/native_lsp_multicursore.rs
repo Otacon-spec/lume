@@ -12,8 +12,10 @@ async fn multicursore_lsp_reale_principale_completamento_e_stale() -> Esito {
         .ok_or_else(|| io::Error::other("serve LUME_RUST_ANALYZER reale"))?;
     assert!(program.is_absolute() && program.is_file());
     eprintln!(
-        "MULTICURSORE_LSP_REALE:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "MULTICURSORE_LSP_REALE:binario_sha256={}",
+        crate::aggiornamento::esadecimale(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let base = tempfile::tempdir()?;
     let root = base.path().join("progetto città spazio");

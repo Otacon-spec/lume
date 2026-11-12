@@ -156,8 +156,10 @@ async fn recipe_due_radici_answer_stopped_vecchi_successore_reali() -> Esito {
         return Err(io::Error::other("binario reale non assoluto/file").into());
     }
     eprintln!(
-        "APP_REALE67:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "APP_REALE67:binario_sha256={}",
+        crate::aggiornamento::esadecimale(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let fixture = tempfile::Builder::new()
         .prefix("lume-root67-città spazio-")

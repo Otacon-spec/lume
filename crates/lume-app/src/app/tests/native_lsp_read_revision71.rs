@@ -15,8 +15,10 @@ async fn recipe_definizione_reader_edit_undo_aba_rifiuta_risultato_reale() -> Es
         return Err(io::Error::other("binario reale non assoluto/file").into());
     }
     eprintln!(
-        "APP_REALE71:binario_sha256={:x}",
-        <sha2::Sha256 as sha2::Digest>::digest(std::fs::read(&program)?)
+        "APP_REALE71:binario_sha256={}",
+        crate::aggiornamento::esadecimale(&<sha2::Sha256 as sha2::Digest>::digest(std::fs::read(
+            &program
+        )?))
     );
     let fixture = tempfile::Builder::new()
         .prefix("lume-read71-città spazio-")
