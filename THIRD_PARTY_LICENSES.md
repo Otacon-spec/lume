@@ -12,7 +12,7 @@ avvisi; consultare README e metadati del pacchetto per il contenuto effettivo.
 
 ## Riepilogo
 
-- MIT License (540 crate)
+- MIT License (541 crate)
 - zlib License (24 crate)
 - Apache License 2.0 (21 crate)
 - Unicode License v3 (19 crate)
@@ -11128,9 +11128,10 @@ Usata da:
 - [grep-regex 0.1.14](https://github.com/BurntSushi/ripgrep/tree/master/crates/regex)
 - [grep-searcher 0.1.17](https://github.com/BurntSushi/ripgrep/tree/master/crates/searcher)
 - [ignore 0.4.32](https://github.com/BurntSushi/ripgrep/tree/master/crates/ignore)
+- [jiff-core 0.1.4](https://github.com/BurntSushi/jiff)
 - [jiff-tzdb-platform 0.1.3](https://github.com/BurntSushi/jiff)
 - [jiff-tzdb 0.1.8](https://github.com/BurntSushi/jiff)
-- [jiff 0.2.32](https://github.com/BurntSushi/jiff)
+- [jiff 0.2.42](https://github.com/BurntSushi/jiff)
 - [memchr 2.8.3](https://github.com/BurntSushi/memchr)
 - [walkdir 2.5.0](https://github.com/BurntSushi/walkdir)
 
