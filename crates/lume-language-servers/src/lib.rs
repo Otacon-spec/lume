@@ -2,6 +2,8 @@
 
 mod catalog;
 mod discovery;
+#[doc(hidden)]
+pub mod hex;
 mod install;
 mod tls;
 

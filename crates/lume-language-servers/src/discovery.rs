@@ -9,6 +9,8 @@ use std::time::Duration;
 use lume_lsp::{CommandSource, ServerCommand};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
+
+use crate::hex::hex;
 use thiserror::Error;
 use wait_timeout::ChildExt;
 
@@ -342,7 +344,7 @@ fn hash_file(path: &Path) -> Result<String, DiscoveryError> {
         }
         hasher.update(&buffer[..read]);
     }
-    Ok(format!("{:x}", hasher.finalize()))
+    Ok(hex(&hasher.finalize()))
 }
 
 fn probe_version(path: &Path, timeout: Duration) -> Result<String, DiscoveryError> {
