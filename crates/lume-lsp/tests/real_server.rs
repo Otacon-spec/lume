@@ -310,8 +310,8 @@ async fn initialize_hover_completion_definition_change_close_reali() -> Esito {
         "LUME_RUST_ANALYZER non è un file assoluto",
     )?;
     eprintln!(
-        "LSP_REALE:binario_sha256={:x}",
-        Sha256::digest(std::fs::read(&program)?)
+        "LSP_REALE:binario_sha256={}",
+        lume_lsp::hex::hex(&Sha256::digest(std::fs::read(&program)?))
     );
     let dir = DirectoryPosseduta::nuova()?;
     let sorgenti = dir.path()?.join("src");
@@ -395,9 +395,9 @@ async fn initialize_hover_completion_definition_change_close_reali() -> Esito {
         && let Ok(log) = std::fs::read_to_string(&log_path)
     {
         eprintln!(
-            "LSP_REALE:server_log_non_pubblicato,byte={},sha256={:x}",
+            "LSP_REALE:server_log_non_pubblicato,byte={},sha256={}",
             log.len(),
-            Sha256::digest(log.as_bytes())
+            lume_lsp::hex::hex(&Sha256::digest(log.as_bytes()))
         );
     }
     if sessione.state() != SessionState::Ready {

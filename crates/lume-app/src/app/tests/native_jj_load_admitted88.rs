@@ -34,8 +34,8 @@ async fn scenario88(mode: u8) -> Esito80 {
         return Err(io::Error::other("jj non assoluto/file").into());
     }
     eprintln!(
-        "JJ_LOAD_REALE88:server_sha256={:x}",
-        Sha256::digest(std::fs::read(&program)?)
+        "JJ_LOAD_REALE88:server_sha256={}",
+        crate::aggiornamento::esadecimale(&Sha256::digest(std::fs::read(&program)?))
     );
     let cli =
         lume_jj::JjCli::locate().ok_or_else(|| io::Error::other("locator produzione assente"))?;

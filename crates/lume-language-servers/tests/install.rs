@@ -1,6 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
 use std::io::{Cursor, Write};
 
+use lume_language_servers::hex::hex;
 use lume_language_servers::{
     ArchiveFormat, CancelFlag, InstallError, Platform, ServerCatalog, ServerInstaller,
 };
@@ -34,7 +35,7 @@ fn verified_zip_installs_atomically_with_receipt() {
     let payload = b"real-server-binary";
     let archive = zip_bytes(&[(asset.binary_path.as_str(), payload)]);
     asset.size = archive.len() as u64;
-    asset.digest = format!("sha256:{:x}", Sha256::digest(&archive));
+    asset.digest = format!("sha256:{}", hex(&Sha256::digest(&archive)));
     let installer = ServerInstaller::new(temp.path().join("managed"));
     let mut progress = Vec::new();
     let receipt = installer
@@ -47,7 +48,7 @@ fn verified_zip_installs_atomically_with_receipt() {
             |event| progress.push(event),
         )
         .unwrap();
-    assert_eq!(receipt.sha256, format!("{:x}", Sha256::digest(payload)));
+    assert_eq!(receipt.sha256, hex(&Sha256::digest(payload)));
     assert_eq!(
         progress.last(),
         Some(&lume_language_servers::InstallProgress::Installed)
@@ -111,7 +112,7 @@ fn traversal_entry_is_rejected_even_when_expected_binary_exists() {
         (asset.binary_path.as_str(), b"good"),
     ]);
     asset.size = archive.len() as u64;
-    asset.digest = format!("sha256:{:x}", Sha256::digest(&archive));
+    asset.digest = format!("sha256:{}", hex(&Sha256::digest(&archive)));
     let installer = ServerInstaller::new(temp.path().join("managed"));
     assert!(matches!(
         installer.install_bytes(

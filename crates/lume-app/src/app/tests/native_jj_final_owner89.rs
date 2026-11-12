@@ -26,8 +26,8 @@ async fn ultimo_owner_load_worker_e_child_raccolti_dall_uscita_reale() -> Esito8
         return Err(io::Error::other("jj reale non assoluto/file").into());
     }
     eprintln!(
-        "JJ_FINAL_OWNER_REALE89:server_sha256={:x}",
-        Sha256::digest(std::fs::read(&program)?)
+        "JJ_FINAL_OWNER_REALE89:server_sha256={}",
+        crate::aggiornamento::esadecimale(&Sha256::digest(std::fs::read(&program)?))
     );
     let dir = program
         .parent()

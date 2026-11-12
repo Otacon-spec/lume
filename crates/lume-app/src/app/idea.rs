@@ -159,7 +159,10 @@ fn imported_id(source: &Path, uuid: &str) -> String {
     hash.update(source.as_os_str().as_encoded_bytes());
     hash.update([0]);
     hash.update(uuid.as_bytes());
-    format!("idea-{:x}", hash.finalize())
+    format!(
+        "idea-{}",
+        crate::aggiornamento::esadecimale(&hash.finalize())
+    )
 }
 
 fn preview_profiles(report: &crate::idea_import::Report) -> Vec<(String, String)> {

@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use lume_language_servers::hex::hex;
 use lume_language_servers::{
     AttemptFailure, DiscoveryAttempt, DiscoveryError, Platform, ServerCatalog, ServerLocator,
     describe_unavailable,
@@ -60,7 +61,7 @@ fn install_fixture(root: &Path, corrupt_receipt: bool) -> PathBuf {
         "rust-analyzer"
     });
     write_version_fixture(&binary);
-    let digest = format!("{:x}", Sha256::digest(fs::read(&binary).unwrap()));
+    let digest = hex(&Sha256::digest(fs::read(&binary).unwrap()));
     let receipt = json!({
         "server_id": server.id,
         "version": server.release.version,
@@ -102,7 +103,7 @@ fn install_probe_fixture(root: &Path, source: &str) -> PathBuf {
         .status()
         .unwrap();
     assert!(status.success());
-    let digest = format!("{:x}", Sha256::digest(fs::read(&binary).unwrap()));
+    let digest = hex(&Sha256::digest(fs::read(&binary).unwrap()));
     let receipt = json!({
         "server_id": server.id,
         "version": server.release.version,

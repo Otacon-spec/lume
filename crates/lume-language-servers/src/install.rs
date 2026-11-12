@@ -15,6 +15,8 @@ use reqwest::header::LOCATION;
 use reqwest::redirect::Policy;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+
+use crate::hex::hex;
 use thiserror::Error;
 
 use crate::{ArchiveFormat, Platform, PlatformAsset, ServerSpec};
@@ -104,7 +106,7 @@ impl ServerInstaller {
                 actual: bytes.len() as u64,
             });
         }
-        let digest = format!("{:x}", Sha256::digest(bytes));
+        let digest = hex(&Sha256::digest(bytes));
         if !digest.eq_ignore_ascii_case(asset.digest.strip_prefix("sha256:").unwrap_or("")) {
             return Err(InstallError::HashMismatch);
         }
@@ -154,7 +156,7 @@ impl ServerInstaller {
                 os: platform.os.clone(),
                 arch: platform.arch.clone(),
                 binary: binary_name,
-                sha256: format!("{:x}", Sha256::digest(&binary)),
+                sha256: hex(&Sha256::digest(&binary)),
             };
             let receipt_path = staging.join("receipt.json");
             let mut receipt_file =

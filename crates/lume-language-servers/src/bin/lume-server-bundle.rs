@@ -4,6 +4,7 @@ use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use lume_language_servers::hex::hex;
 use lume_language_servers::{
     CancelFlag, InstallProgress, Platform, ServerCatalog, ServerInstaller,
 };
@@ -310,7 +311,7 @@ fn sha256_file(path: &Path) -> Result<String, Box<dyn Error>> {
         }
         hasher.update(&buffer[..count]);
     }
-    Ok(format!("{:x}", hasher.finalize()))
+    Ok(hex(&hasher.finalize()))
 }
 
 #[cfg(test)]

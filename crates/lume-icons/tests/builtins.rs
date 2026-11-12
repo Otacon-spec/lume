@@ -10,6 +10,15 @@ use lume_icons::{
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
+fn hex(bytes: &[u8]) -> String {
+    use std::fmt::Write as _;
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        let _ = write!(out, "{byte:02x}");
+    }
+    out
+}
+
 #[test]
 fn colored_builtins_cover_required_languages_and_folders() {
     let providers: Vec<Box<dyn IconThemeProvider>> = vec![
@@ -166,8 +175,10 @@ fn pinned_inventory_hashes_and_licenses_match() {
 
     for (relative, record) in inventory.assets {
         assert!(!record.upstream_path.is_empty());
-        let actual = Sha256::digest(fs::read(root.join("assets").join(relative)).unwrap());
-        assert_eq!(format!("{actual:x}"), record.sha256);
+        let actual = hex(&Sha256::digest(
+            fs::read(root.join("assets").join(relative)).unwrap(),
+        ));
+        assert_eq!(format!("{actual}"), record.sha256);
     }
     for pack in ["material", "catppuccin-mocha"] {
         let license = fs::read_to_string(root.join("assets").join(pack).join("LICENSE")).unwrap();

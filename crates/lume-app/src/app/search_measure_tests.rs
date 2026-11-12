@@ -30,10 +30,17 @@ fn corpus() -> (tempfile::TempDir, Vec<PathBuf>, String) {
         // Manifest indipendente dalla radice temporanea: nome LF hash LF.
         hash.update(name.as_bytes());
         hash.update(b"\n");
-        hash.update(format!("{:x}\n", Sha256::digest(content.as_bytes())));
+        hash.update(format!(
+            "{}\n",
+            crate::aggiornamento::esadecimale(&Sha256::digest(content.as_bytes()))
+        ));
         paths.push(file);
     }
-    (dir, paths, format!("{:x}", hash.finalize()))
+    (
+        dir,
+        paths,
+        crate::aggiornamento::esadecimale(&hash.finalize()),
+    )
 }
 
 fn kib(text: &str, label: &str) -> u64 {
@@ -340,12 +347,18 @@ async fn app_measure(root: &std::path::Path, paths: &[PathBuf], repeat: usize, m
 #[ignore = "misura isolata Linux: usare verifica_locale.sh measure-search, non accettazione GUI/Windows"]
 fn misura_pipeline_cerca_reale() {
     println!(
-        "SORGENTI,bench={:x},app={:x},core={:x},canale={:x},supervisor={:x}",
-        Sha256::digest(include_bytes!("search_measure_tests.rs")),
-        Sha256::digest(include_bytes!("../app.rs")),
-        Sha256::digest(include_bytes!("../../../lume-core/src/search.rs")),
-        Sha256::digest(include_bytes!("../../../lume-core/src/search/events.rs")),
-        Sha256::digest(include_bytes!("../search_events.rs"))
+        "SORGENTI,bench={},app={},core={},canale={},supervisor={}",
+        crate::aggiornamento::esadecimale(&Sha256::digest(include_bytes!(
+            "search_measure_tests.rs"
+        ))),
+        crate::aggiornamento::esadecimale(&Sha256::digest(include_bytes!("../app.rs"))),
+        crate::aggiornamento::esadecimale(&Sha256::digest(include_bytes!(
+            "../../../lume-core/src/search.rs"
+        ))),
+        crate::aggiornamento::esadecimale(&Sha256::digest(include_bytes!(
+            "../../../lume-core/src/search/events.rs"
+        ))),
+        crate::aggiornamento::esadecimale(&Sha256::digest(include_bytes!("../search_events.rs")))
     );
     let (dir, paths, hash) = corpus();
     println!("CORPUS,200file,10righe,4096byte_riga,8192000byte,sha256={hash}");

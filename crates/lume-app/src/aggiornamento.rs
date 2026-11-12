@@ -358,7 +358,7 @@ fn sha256_file(percorso: &Path) -> Result<String, String> {
     Ok(esadecimale(&hasher.finalize()))
 }
 
-fn esadecimale(byte: &[u8]) -> String {
+pub(crate) fn esadecimale(byte: &[u8]) -> String {
     use std::fmt::Write as _;
     byte.iter()
         .fold(String::with_capacity(byte.len() * 2), |mut s, b| {

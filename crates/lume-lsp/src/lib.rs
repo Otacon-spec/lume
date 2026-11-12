@@ -5,6 +5,8 @@ mod diagnostics;
 mod documents;
 mod features;
 mod framing;
+#[doc(hidden)]
+pub mod hex;
 // Job Object di Windows e gruppi di processi Unix: FFI, quindi `unsafe`.
 #[allow(unsafe_code)]
 mod process;
