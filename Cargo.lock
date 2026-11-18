@@ -3820,7 +3820,7 @@ dependencies = [
  "roxmltree 0.21.2",
  "serde",
  "serde_json",
- "sha2 0.11.0",
+ "sha2 0.11.1",
  "tempfile",
  "tokio",
  "toml 0.8.23",
@@ -3841,7 +3841,7 @@ dependencies = [
  "libc",
  "notify",
  "ropey",
- "sha2 0.11.0",
+ "sha2 0.11.1",
  "tempfile",
  "thiserror 2.0.18",
  "unicode-segmentation",
@@ -3883,7 +3883,7 @@ dependencies = [
  "roxmltree 0.21.2",
  "serde",
  "serde_json",
- "sha2 0.11.0",
+ "sha2 0.11.1",
  "tempfile",
  "thiserror 2.0.18",
 ]
@@ -3912,7 +3912,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
- "sha2 0.11.0",
+ "sha2 0.11.1",
  "tar",
  "tempfile",
  "thiserror 2.0.18",
@@ -3933,7 +3933,7 @@ dependencies = [
  "ropey",
  "serde",
  "serde_json",
- "sha2 0.11.0",
+ "sha2 0.11.1",
  "thiserror 2.0.18",
  "tokio",
  "windows-sys 0.61.2",
@@ -4819,7 +4819,7 @@ dependencies = [
  "pkcs8",
  "rand 0.10.2",
  "rustls",
- "sha2 0.11.0",
+ "sha2 0.11.1",
  "uuid",
  "webpki-roots",
  "whoami",
@@ -4969,7 +4969,7 @@ dependencies = [
  "pbkdf2",
  "rand_core 0.10.1",
  "scrypt",
- "sha2 0.11.0",
+ "sha2 0.11.1",
  "spki",
 ]
 
@@ -5826,7 +5826,7 @@ dependencies = [
  "cfg-if",
  "pbkdf2",
  "salsa20",
- "sha2 0.11.0",
+ "sha2 0.11.1",
 ]
 
 [[package]]
@@ -5992,9 +5992,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
+checksum = "47d7069beb7d6ac7b9acd1039986e73443f24234f41074da099d6f994ac9ad19"
 dependencies = [
  "cfg-if",
  "cpufeatures 0.3.0",
